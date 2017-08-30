@@ -1,0 +1,35 @@
+service: coffee-cupping
+
+provider:
+  name: aws
+  runtime: python3.6
+  memorySize: 128
+
+# you can add packaging information here
+package:
+  exclude:
+    - .git/
+    - "*.pyc"
+    - "*.swp"
+
+
+# you can add CloudFormation resource templates here
+#resources:
+#  Resources:
+#    NewResource:
+#      Type: AWS::S3::Bucket
+#      Properties:
+#        BucketName: my-new-bucket
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
+#
+functions:
+  HandleSession:
+    handler: handler.session
+    events:
+      - http: GET session
+      - http: POST session
+      - http: PUT session
+      - http: DELETE session

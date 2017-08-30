@@ -1,0 +1,2 @@
+sqlalchemy>=1.2.0b2
+psycopg2
