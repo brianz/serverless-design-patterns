@@ -5,7 +5,7 @@ provider:
   runtime: python3.6
   memorySize: 128
   region: ${env:AWS_REGION}
-  timeout: 15
+  timeout: 5
   environment:
     CUPPING_DB_USERNAME: ${env:CUPPING_DB_USERNAME}
     CUPPING_DB_PASSWORD: ${env:CUPPING_DB_PASSWORD}
@@ -35,8 +35,9 @@ provider:
 # you can add packaging information here
 package:
   exclude:
-    - .git/
-    - __pycache__
+    - .git/**
+    - __pycache__/**
+    - "**/__pycache__/**"
     - "*.pyc"
     - "*.swp"
 
