@@ -39,6 +39,10 @@ class BaseCuppingServicMixin:
         session.add(self)
 
     @classmethod
+    def flush(self):
+        get_session().flush()
+
+    @classmethod
     def _get_index(cls, name, *columns, **kwargs):
         cols = [getattr(cls, c) for c in columns]
         return Index(name, *cols, **kwargs)

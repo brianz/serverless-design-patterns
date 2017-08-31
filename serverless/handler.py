@@ -8,11 +8,10 @@ CWD = Path(__file__).resolve().cwd() / 'lib'
 sys.path.insert(0, str(CWD))
 
 from cupping.handlers.session import handle_session
-from cupping.db import setup_db
+
 
 
 def session(event, context):
-    setup_db()
     http_method = event['httpMethod']
     response = handle_session(http_method, event)
 
@@ -27,3 +26,15 @@ def session(event, context):
     }
 
     return response
+
+
+# if __name__ == '__main__':
+#     from cupping.models import *
+#     from cupping.db import (
+#             _drop_tables,
+#             create_tables,
+#             setup_db,
+#     )
+#     setup_db()
+#     _drop_tables(force=True)
+#     create_tables()

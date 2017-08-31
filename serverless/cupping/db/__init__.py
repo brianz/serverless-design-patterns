@@ -4,6 +4,7 @@ from contextlib import contextmanager
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
 
 
 from ..constants import (
@@ -24,7 +25,7 @@ __is_test = False
 
 
 
-def setup_db(is_test=False, **db_config):
+def setup_db(*, is_test=False, **db_config):
     global __engine
     global __is_test
 
@@ -33,12 +34,17 @@ def setup_db(is_test=False, **db_config):
 
     connection_string = get_connection_string()
     connection_kwargs = db_config.get('connection_kwargs', {})
-    connection_kwargs['echo'] = True
+
+    # TODO - debug stuff
+    # connection_kwargs['echo'] = True
+    # connection_kwargs['poolclass'] = NullPool
+
     session_kwargs = db_config.get('session_kwargs', {})
 
     if 'test_' in connection_string or connection_string == 'sqlite://' or is_test:
         __is_test = True
 
+    print('Connecting to: %s' % (connection_string, ))
     __engine = create_engine(connection_string, **connection_kwargs)
     create_tables()
     get_session(**session_kwargs)
@@ -95,16 +101,16 @@ def create_tables():
     meta = _get_metadata()
     meta.create_all(__engine)
 
-def _drop_tables():
-    if not __is_test:
+def _drop_tables(*, force=False):
+    if not __is_test and not force:
         return
     assert __engine
     meta = _get_metadata()
     meta.drop_all(__engine)
 
 
-def _clear_tables():
-    if not __is_test:
+def _clear_tables(*, force=False):
+    if not __is_test and not force:
         return
 
     assert __engine
@@ -121,6 +127,8 @@ def _clear_tables():
 
 
 def get_session(**kwargs):
+    setup_db()
+
     assert __engine
     global __session
     global __session_factory

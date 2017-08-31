@@ -1,6 +1,9 @@
 import json
 
-from ..models.cupping import Cupping
+from ..models import (
+        Cupping,
+        Session,
+)
 
 
 def decode_json(fn):
@@ -13,13 +16,18 @@ def decode_json(fn):
 @decode_json
 def create_session(json_payload):
     print('Creating session', json_payload)
+    #session = Session.create(json_payload)
+    #cuppingprint('Created session: %s' % (session.id, ))
+
 
 def read_session(data):
     print('Reading session', data)
 
+
 @decode_json
 def update_session(json_payload):
     print('Updating session', json_payload)
+
 
 def delete_session(data):
     print('Deleting session', data)

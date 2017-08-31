@@ -4,113 +4,56 @@ from ..db.base import Base
 from sqlalchemy import (
         Boolean,
         Column,
+        ForeignKey,
         Integer,
         Numeric,
         String,
 )
-
-# class ScoreEmbed:
-#
-#     name = StringField()
-#     value = FloatField()
-#
-#     def __unicode__(self):
-#         return u'%s - %0.1f' % (self.name, self.value)
+from sqlalchemy.orm import relationship, validates
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 class Cupping(CuppingServiceBaseMixin, Base):
     """An individual cupping for one object (roast)."""
+    __tablename__ = 'cuppings'
 
-    account_id = Column(Integer)
-    user_id = Column(Integer)
+    #: the `Session` this cupping is a part of
+    session_id = Column(Integer, ForeignKey('sessions.id'), nullable=False)
+
+    # `Cupping.session` refers to a `Session` instance, and on the other side, `Session.cuppings`
+    # refers to a list of `Cupping` instances.
+    session = relationship('Session', back_populates='cuppings')
+
+    #: This is the real juicy bit.  `scores` is a list of key/value, where key is column name
+    #: with a matching numeric score.  Note, we index on the keys to supporty querying.
+    scores = Column(JSONB, nullable=False)
 
     #: Final score for this coffee
-    score = Column(Numeric(decimal_return_scale=1))
-
-    #origin_ids = ListField(IntField(db_field='_origin_id'))
-
-    #: the CuppingSessions this cupping is a part of
-    #session_id = ObjectIdField()
-
-    #: This is the real juicy bit.  Score are a simple key/value of column name
-    #: to numeric score.  The keys are used to query.
-    #scores = ListField(EmbeddedDocumentField(ScoreEmbedded))
-
-    #: Embed the list of columns from the cupping form.  This is so that we can
-    #: maintain order when displaying the results.
-    #columns = ListField()
-
-    #: A copy of the scores, but the keys are unaltered from the cupping form
-    #: so that the scores can be displayed directly to the user.
-    #display_scores = DictField()
+    total_score = Column(Numeric(decimal_return_scale=1))
 
     #: A list of descriptors
-    #tags = ListField(StringField())
+    descriptors = Column(JSONB, nullable=True)
 
     #: A list of defects
-    #defects = ListField(StringField())
+    defects = Column(JSONB, nullable=True)
 
     #: General notes
     notes = Column(String(length=255))
 
-    #: Primary key back to the roast or sample
-    # roast_id = IntField()
-
-    #: The auto_inc value for the roast.
-    # roast_number = IntField()
-
-    #: The name of the roastable for this roast.
-    # roastable_name = StringField()
-
-    #: The roastable id.
-    # roastable_id = IntField()
-
     #: tells whether or not the object is a sample
     is_sample = Column(Boolean, default=False)
 
-    @property
-    def columns_slug(self):
-        """Return a slug for the cupping form columns.
-
-        This is a quick and easy way to compare two cuppings.  If two cuppings
-        have the same ``columns_slug``, they were cupped with the same form.
-
-        """
-        #return slugify(''.join(sorted(self.columns)))
-
-    @property
-    def local_timestamp(self):
-        #return self.added_by.local_timestamp
-        pass
-
-    @property
-    def ordered_display_scores(self):
-        pass
-        # for col in self.columns:
-        #     yield (col, self.display_scores.get(col))
-
-    @property
-    def country_names(self):
-        pass
-
-    @property
-    def form_name(self):
-        pass
-        #return self.get_form_name()
-
-    def get_form_name(self, forms=None):
-        pass
-        # account_forms = forms or CuppingForm.objects(account_id=self.account_id)
-        #
-        # for form in account_forms:
-        #     if self.columns == form.columns:
-        #         return form.name
-
-    def set_scores(self, scores):
-        """Helper to update both sets of scores"""
-        pass
-        # self.display_scores = scores
-        # # Don't store a score if it's null.  Note that a 0 is still valid and
-        # # should be stored.
-        # self.scores = [ScoreEmbedded(name=slugify(k), value=v) \
-        #                for (k, v) in scores.iteritems() if v not in (None, '')]
+    @classmethod
+    def create(cls, data, session=None):
+        assert session
+        cupping = Cupping(
+                session_id=session.id,
+                scores=data['scores'],
+                total_score=data['overallScore'],
+                descriptors=data.get('descriptors', []),
+                defects=data.get('defects', []),
+                notes=data.get('notes', ''),
+                is_sample=data.get('isSample', False),
+        )
+        cupping.save()
+        return cupping
