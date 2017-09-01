@@ -15,14 +15,9 @@ def session(event, context):
     http_method = event['httpMethod']
     response = handle_session(http_method, event)
 
-    body = {
-        "message": "Go Serverless v1.0! Your function executed successfully!",
-        "input": event
-    }
-
     response = {
         "statusCode": 200,
-        "body": json.dumps(body)
+        "body": json.dumps(response)
     }
 
     return response

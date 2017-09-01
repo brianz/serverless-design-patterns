@@ -16,8 +16,14 @@ def decode_json(fn):
 @decode_json
 def create_session(json_payload):
     print('Creating session', json_payload)
-    #session = Session.create(json_payload)
-    #cuppingprint('Created session: %s' % (session.id, ))
+    session = Session.create(json_payload)
+    print('Created session: %s' % (session.id, ))
+    return {
+            'session': {
+                'id': session.id,
+                'name': session.name,
+            }
+    }
 
 
 def read_session(data):

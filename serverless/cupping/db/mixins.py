@@ -28,7 +28,7 @@ def class_name_to_underscores(name):
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
-class BaseCuppingServicMixin:
+class CuppingServiceModelMixin:
 
     @declared_attr
     def __tablename__(cls):

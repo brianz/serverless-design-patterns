@@ -1,5 +1,5 @@
 from .base import CuppingServiceBaseMixin
-from ..db.base import Base
+from ..db.mixins import Base
 
 from sqlalchemy import (
         Boolean,

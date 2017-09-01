@@ -92,7 +92,7 @@ def commit_session():
 
 
 def _get_metadata():
-    from .base import Base
+    from .mixins import Base
     return Base.metadata
 
 

@@ -5,15 +5,14 @@ from sqlalchemy import (
         text,
 )
 
-from ..db.base import (
-        Base,
-        BaseCuppingServicMixin,
+from ..db.mixins import (
+        CuppingServiceModelMixin,
 )
 
 from ..helpers import utcnow
 
 
-class CuppingServiceBaseMixin(BaseCuppingServicMixin):
+class CuppingServiceBaseMixin(CuppingServiceModelMixin):
     id =  Column(Integer, primary_key=True)
 
     created = Column(DateTime,
