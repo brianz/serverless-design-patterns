@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
+from sqlalchemy_utils import database_exists, create_database
 
 from ..constants import (
         DB_ENGINE,
@@ -31,20 +32,27 @@ def setup_db(*, is_test=False, **db_config):
     if __engine:
         return
 
+    __is_test = is_test
+
     connection_string = get_connection_string()
     connection_kwargs = db_config.get('connection_kwargs', {})
 
-    # TODO - debug stuff
-    connection_kwargs['echo'] = True
+    # we always want to close connections
     connection_kwargs['poolclass'] = NullPool
+
+    # TODO - debug stuff
+    #if __is_test:
+    connection_kwargs['echo'] = True
 
     session_kwargs = db_config.get('session_kwargs', {})
 
-    if 'test_' in connection_string or connection_string == 'sqlite://' or is_test:
-        __is_test = True
-
-    print('Connecting to: %s' % (connection_string, ))
     __engine = create_engine(connection_string, **connection_kwargs)
+    print('Connected to: %s' % (__engine.url, ))
+
+    if not database_exists(__engine.url):
+        print('Creating database: %s' % (__engine.url, ))
+        create_database(__engine.url)
+
     create_tables()
     get_session(**session_kwargs)
 
@@ -55,6 +63,8 @@ def get_connection_string(**kwargs):
         dialect+driver://username:password@host:port/database
 
     """
+    global DB_NAME
+
     if DB_ENGINE not in (SQLITE, POSTGRESQL):
         raise ValueError(
                 'Invalid database engine specified: %s. Only sqlite' \
@@ -63,6 +73,9 @@ def get_connection_string(**kwargs):
     if DB_ENGINE == SQLITE:
         # missing filename creates an in-memory db
         return 'sqlite://%s' % kwargs.get('filename', '')
+
+    if __is_test and not DB_NAME.startswith('test_'):
+        DB_NAME = 'test_%s' % (DB_NAME, )
 
     return 'postgresql://%s:%s@%s:%s/%s' % (
             DB_USERNAME,

@@ -10,7 +10,10 @@ from sqlalchemy import (
         Numeric,
         String,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import (
+        relationship,
+        validates,
+)
 
 
 class Session(CuppingServiceBaseMixin, Base):
@@ -27,12 +30,43 @@ class Session(CuppingServiceBaseMixin, Base):
 
     cuppings = relationship('Cupping', order_by='Cupping.id', back_populates='session')
 
+    def _validate_integer(self, key, value):
+        try:
+            return int(value)
+        except ValueError:
+            raise ValueError('%s field must be an integer value' % (key, ))
+
+    def _validate_string(self, key, value):
+        if not value.strip():
+            raise ValueError('%s field must be non-empty string' % (key, ))
+        return value
+
+    @validates('name')
+    def validate_name(self, key, value):
+        return self._validate_string(key, value)
+
+    @validates('form_name')
+    def validate_form_name(self, key, value):
+        return self._validate_string(key, value)
+
+    @validates('account_id')
+    def validate_account_id(self, key, value):
+        if value:
+            return self._validate_integer(key, value)
+
+    @validates('user_id')
+    def validate_user_id(self, key, value):
+        if value:
+            return self._validate_integer(key, value)
+
     @classmethod
     def create(cls, data):
         with dbtransaction():
             session = cls(
                     name=data['name'],
                     form_name=data['formName'],
+                    account_id=data.get('accountId'),
+                    user_id=data.get('userId'),
             )
             session.save()
             session.flush()
