@@ -14,7 +14,7 @@ provider:
       Fn::GetAtt:
         - RDSPostgresInstance
         - Endpoint.Address
-    SECRET_VAR: ${env:SECRET_VAR}
+          # SECRET_VAR: ${env:SECRET_VAR}
   vpc:
     securityGroupIds:
       - Fn::GetAtt: ServerlessSecurityGroup.GroupId

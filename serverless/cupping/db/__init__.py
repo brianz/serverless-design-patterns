@@ -24,7 +24,6 @@ __engine = None
 __is_test = False
 
 
-
 def setup_db(*, is_test=False, **db_config):
     global __engine
     global __is_test
@@ -36,8 +35,8 @@ def setup_db(*, is_test=False, **db_config):
     connection_kwargs = db_config.get('connection_kwargs', {})
 
     # TODO - debug stuff
-    # connection_kwargs['echo'] = True
-    # connection_kwargs['poolclass'] = NullPool
+    connection_kwargs['echo'] = True
+    connection_kwargs['poolclass'] = NullPool
 
     session_kwargs = db_config.get('session_kwargs', {})
 
@@ -50,7 +49,7 @@ def setup_db(*, is_test=False, **db_config):
     get_session(**session_kwargs)
 
 
-def get_connection_string():
+def get_connection_string(**kwargs):
     """Return a connection string for sqlalchemy::
 
         dialect+driver://username:password@host:port/database
@@ -62,6 +61,7 @@ def get_connection_string():
                 ' and postgresql are supported' % (DB_ENGINE, ))
 
     if DB_ENGINE == SQLITE:
+        # missing filename creates an in-memory db
         return 'sqlite://%s' % kwargs.get('filename', '')
 
     return 'postgresql://%s:%s@%s:%s/%s' % (

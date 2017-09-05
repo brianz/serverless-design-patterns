@@ -11,7 +11,10 @@ from sqlalchemy import (
         Index,
 )
 
-from . import get_session
+from . import (
+        commit_session,
+        get_session,
+)
 
 index_convention = {
     "ix": "ix_%(table_name)s_%(column_0_label)s",
@@ -34,9 +37,11 @@ class CuppingServiceModelMixin:
     def __tablename__(cls):
         return class_name_to_underscores(cls.__name__)
 
-    def save(self):
+    def save(self, *, commit=False):
         session = get_session()
         session.add(self)
+        if commit:
+            commit_session()
 
     @classmethod
     def flush(self):

@@ -39,7 +39,7 @@ class Session(CuppingServiceBaseMixin, Base):
 
             cuppings = [
                     Cupping.create(c, session=session) \
-                    for c in data['cuppings']
+                    for c in data.get('cuppings', ())
             ]
 
             return session
