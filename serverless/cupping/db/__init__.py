@@ -156,6 +156,14 @@ def get_session(**kwargs):
     return __session
 
 
+def session_getter(func):
+    """Decorator to get a session and inject it as the first argument in a function"""
+    def wrapper(*args, **kwargs):
+        session = get_session()
+        return func(session, *args, **kwargs)
+    return wrapper
+
+
 @contextmanager
 def dbtransaction():
     s = get_session()

@@ -4,6 +4,7 @@ from ..models import (
         Cupping,
         Session,
 )
+from ..exceptions import Http404
 
 
 def decode_json(fn):
@@ -26,8 +27,15 @@ def create_session(json_payload):
     }
 
 
-def read_session(data):
+def get_session(data):
+
+    try:
+        session_id = int(data.get('pathParameters', {}).get('id'))
+    except ValueError:
+        raise Http404('Invalid session id')
+
     print('Reading session', data)
+
 
 
 @decode_json
@@ -40,10 +48,10 @@ def delete_session(data):
 
 
 method_map = {
-        'GET': create_session,
+        'GET': get_session,
         'POST': create_session,
-        'PUT': create_session,
-        'DELETE': create_session,
+        'PUT': update_session,
+        'DELETE': delete_session,
 }
 
 

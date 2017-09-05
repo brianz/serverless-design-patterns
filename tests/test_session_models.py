@@ -3,7 +3,13 @@ import pytest
 from decimal import Decimal
 
 from cupping.db import dbtransaction, commit_session, get_session
-from cupping.models import Session
+from cupping.models import Session, SessionModel
+
+
+
+def test_session_model():
+    s = SessionModel()
+    s.validate()
 
 
 

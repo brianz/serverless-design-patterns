@@ -1,4 +1,5 @@
-sqlalchemy>=1.2.0b2
+factory_boy
 psycopg2
 schematics
 sqlalchemy-utils
+sqlalchemy>=1.2.0b2

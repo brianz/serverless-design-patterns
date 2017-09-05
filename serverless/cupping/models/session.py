@@ -16,6 +16,18 @@ from sqlalchemy.orm import (
 )
 
 
+from schematics.models import Model
+from schematics.types import StringType, IntType
+
+class SessionModel(Model):
+    name = StringType(max_length=127, required=True)
+    form_name = StringType(max_length=127, required=True)
+    account_id = IntType()
+    user_id = IntType()
+
+
+
+
 class Session(CuppingServiceBaseMixin, Base):
     """A group of cuppings."""
     __tablename__ = 'sessions'

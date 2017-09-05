@@ -108,11 +108,28 @@ resources:
         VPCSecurityGroups:
           - Fn::GetAtt: RDSSecurityGroup.GroupId
 
+
 functions:
   HandleSession:
     handler: handler.session
     events:
-      - http: GET session
-      - http: POST session
-      - http: PUT session
-      - http: DELETE session
+      - http:
+          path: session
+          method: get
+      - http:
+          path: session
+          method: post
+      - http:
+          path: session/{id}
+          method: get
+          request:
+            parameters:
+              paths:
+                id: true
+      - http:
+          path: session/{id}
+          method: delete
+          request:
+            parameters:
+              paths:
+                id: true
