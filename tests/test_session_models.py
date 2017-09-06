@@ -1,99 +1,68 @@
 import pytest
 
 from decimal import Decimal
+from schematics.exceptions import DataError
 
-from cupping.db import dbtransaction, commit_session, get_session
-from cupping.models import Session, SessionModel
-
-
-
-def test_session_model():
-    s = SessionModel()
-    s.validate()
+from helpers import prettify_schematics_errors
 
 
+def test_session_create_name_required(session):
+    session.form_name = 'my form'
 
-def test_session_create_name_required():
-    with pytest.raises(ValueError) as e:
-        Session.create({
-                'name': '',
-                'formName': 'myform',
-        })
+    with pytest.raises(DataError) as e:
+        session.validate()
 
-
-def test_session_create_form_name_required():
-    with pytest.raises(ValueError) as e:
-        Session.create({
-                'name': 'Session',
-                'formName': '',
-        })
+    errors = prettify_schematics_errors(e)
+    assert errors == {
+            'name': ['This field is required.'],
+    }
 
 
-def test_session_create_account_id_requires_int():
-    with pytest.raises(ValueError) as e:
-        Session.create({
-            'name': 'Test Session',
-            'formName': 'SCAA',
-            'accountId': 'abc123',
-            'userId': 12345
-        })
-    assert 'account_id field must be an integer value' in str(e)
+def test_session_create_form_name_required(session):
+    session.name = 'Test cupping'
+
+    with pytest.raises(DataError) as e:
+        session.validate()
+
+    errors = prettify_schematics_errors(e)
+    assert errors == {
+            'form_name': ['This field is required.'],
+    }
 
 
-def test_session_create_user_id_requires_int():
-    with pytest.raises(ValueError) as e:
-        Session.create({
-            'name': 'Test Session',
-            'formName': 'SCAA',
-            'accountId': '123',
-            'userId': 'abc',
-        })
-    assert 'user_id field must be an integer value' in str(e)
+def test_session_create_account_id_requires_int(valid_session):
+    valid_session.account_id = 'a123'
+
+    with pytest.raises(DataError) as e:
+        valid_session.validate()
+
+    errors = prettify_schematics_errors(e)
+    assert errors == {
+            'account_id': ["Value 'a123' is not int."],
+    }
 
 
-def test_session_create_no_cuppings():
-    s = Session.create({
-            'name': 'Test Session',
-            'formName': 'SCAA',
-    })
-    assert s.id
-    assert s.name == 'Test Session'
-    assert s.form_name == 'SCAA'
-    assert s.cuppings == []
-    assert s.account_id == None
-    assert s.user_id == None
+def test_session_create_user_id_requires_int(valid_session):
+    valid_session.user_id = 'a123'
+
+    with pytest.raises(DataError) as e:
+        valid_session.validate()
+
+    errors = prettify_schematics_errors(e)
+    assert errors == {
+            'user_id': ["Value 'a123' is not int."],
+    }
 
 
-def test_session_create_cuppings():
-    s = Session.create({
-            'name': 'Test Session',
-            'formName': 'SCAA',
-            'cuppings': [
-                {
-                    'scores': {'Aroma': 8, 'Flavor': 6},
-                    'overallScore': 88.8,
-                },
-                {
-                    'scores': {'Aroma': 6, 'Flavor': 7},
-                    'overallScore': 75,
-                },
-            ]
-    })
-    assert s.id
+def test_session_valid_no_cuppings(valid_session):
+    assert not valid_session.validate()
+    assert not valid_session.cuppings
 
-    expected_overall = sorted([Decimal('88.8'), Decimal('75')])
-    actual_overall = sorted([c.overall_score for c in s.cuppings])
-    assert expected_overall == actual_overall
-    assert [c.id for c in s.cuppings]
 
-def test_session_create_with_user_and_account():
-    s = Session.create({
-            'name': 'Test Session',
-            'formName': 'SCAA',
-            'accountId': '123',
-            'userId': '555000',
-    })
-    assert s.id
-    assert s.account_id == 123
-    assert s.user_id == 555000
+def test_session_valid_cuppings(valid_session, cuppings):
+    valid_session.cuppings = cuppings
+    assert not valid_session.validate()
 
+    for c in valid_session.cuppings:
+        for value in c.scores.values():
+            assert isinstance(value, Decimal)

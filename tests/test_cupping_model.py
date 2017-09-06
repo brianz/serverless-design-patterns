@@ -1,94 +1,84 @@
 import pytest
 
 from decimal import Decimal
+from schematics.exceptions import DataError
 
-from cupping.db import dbtransaction, commit_session, get_session
-from cupping.models import Cupping, Session
+from helpers import prettify_schematics_errors
+
+from cupping.models import Cupping
 
 
-@pytest.fixture()
-def session():
-    return Session.create({
-        'name': 'test session',
-        'formName': 'scaa',
+def test_session_invalid_cupping_score():
+    with pytest.raises(DataError) as e:
+        Cupping({
+            'session_id': 10,
+            'scores': {
+                'Aroma': 'abc',
+                'Flavor': '5',
+            },
+            'overall_score': 88.5,
+        })
+
+    errors = prettify_schematics_errors(e)
+    assert errors == {
+           'scores': {
+               'Aroma': ["Number 'abc' failed to convert to a decimal."]
+            }
+    }
+
+
+def test_session_overall_score_min_value():
+    c = Cupping({
+        'session_id': 10,
+        'scores': {},
+        'overall_score': '-0.1',
     })
+    with pytest.raises(DataError) as e:
+        c.validate()
 
-
-def test_cupping_create(session):
-    scores = {'Aroma': 8, 'Flavor': 6.5}
-    data = {
-            'scores': scores,
-            'overallScore': 88.5,
-            # note leading/trailing spaces should be stripped
-            'descriptors': [' berry ', 'fruit'],
-            'defects': [' sour ', 123],
-            'notes': 'This was really good',
-            'isSample': 'true',
+    errors = prettify_schematics_errors(e)
+    assert errors == {
+           'overall_score': ['Value should be greater than or equal to 0.']
     }
-    c = Cupping.create(data, session=session)
-    commit_session()
-
-    assert c.id
-    assert c.session_id == session.id
-    assert c.scores == scores
-    assert c.overall_score == Decimal('88.5')
-    assert c.descriptors == ['berry', 'fruit']
-    assert c.defects == ['sour', '123']
-    assert c.notes == 'This was really good'
-    assert c.is_sample == True
-
-    # Test the forward relationship
-    assert c.session.id == session.id
 
 
-def test_cupping_create_default_values(session):
-    scores = {'Aroma': 8, 'Flavor': 6.5}
-    data = {
-            'scores': scores,
-            'overallScore': 88.5,
+def test_session_overall_score_max_value():
+    c = Cupping({
+        'session_id': 10,
+        'scores': {},
+        'overall_score': '100.1',
+    })
+    with pytest.raises(DataError) as e:
+        c.validate()
+
+    errors = prettify_schematics_errors(e)
+    assert errors == {
+           'overall_score': ['Value should be less than or equal to 100.']
     }
-    c = Cupping.create(data, session=session)
-    commit_session()
-    assert c.defects == []
-    assert c.descriptors == []
-    assert c.is_sample == False
 
 
-def test_cupping_create_scores_requires_dict(session):
-    scores = [{'Aroma': 8, 'Flavor': 6.5}]
-    data = {
-            'scores': scores,
-            'overallScore': 88.5,
+def test_session_scores_required():
+    c = Cupping({
+        'session_id': 10,
+        'overall_score': '100',
+    })
+    with pytest.raises(DataError) as e:
+        c.validate()
+
+    errors = prettify_schematics_errors(e)
+    assert errors == {
+           'scores': ['This field is required.']
     }
-    with pytest.raises(ValueError) as e:
-        Cupping.create(data, session=session)
-
-    assert 'Scores must be a mapping of name to numeric value' in str(e)
 
 
-def test_cupping_create_descriptors_requires_list(session):
-    scores = {'Aroma': 8, 'Flavor': 6.5}
-    data = {
-            'scores': scores,
-            'overallScore': 88.5,
-            'descriptors': 'yummy',
+def test_session_invalid_overall_score():
+    with pytest.raises(DataError) as e:
+        Cupping({
+            'session_id': 10,
+            'overall_score': 'abc',
+        })
+
+    errors = prettify_schematics_errors(e)
+    assert errors == {
+           'overall_score': ["Number 'abc' failed to convert to a decimal."]
     }
-    with pytest.raises(ValueError) as e:
-        Cupping.create(data, session=session)
-
-    assert 'descriptors must be a list of strings' in str(e)
-
-
-def test_cupping_create_defects_requires_list(session):
-    scores = {'Aroma': 8, 'Flavor': 6.5}
-    data = {
-            'scores': scores,
-            'overallScore': 88.5,
-            'defects': 'yummy',
-    }
-    with pytest.raises(ValueError) as e:
-        Cupping.create(data, session=session)
-
-    assert 'defects must be a list of strings' in str(e)
-
-
