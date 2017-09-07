@@ -42,8 +42,8 @@ class Session(CuppingServiceBaseMixin, Base):
             raise ValueError('%s field must be an integer value' % (key, ))
 
     def _validate_string(self, key, value):
-        if not value.strip():
-            raise ValueError('%s field must be non-empty string' % (key, ))
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError('%s field must be a non-empty string' % (key, ))
         return value
 
     @validates('name')

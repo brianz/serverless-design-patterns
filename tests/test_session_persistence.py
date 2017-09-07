@@ -1,4 +1,74 @@
-from cupping.db import dbtransaction, commit_session, get_session
+import pytest
+
+from decimal import Decimal
+
+from cupping.db import (
+        dbtransaction,
+        commit_session,
+        get_session,
+)
+from cupping.models import CuppingModel
+from cupping.persistence import Cupping
+
+from factories import SessionFactory
+
+
+@pytest.fixture()
+def session(cupping_model):
+    return SessionFactory()
+
+
+def test_session_create(session):
+    assert session.id
+
+def test_session_create_default_values(session):
+    assert session.form_name
+    assert session.account_id == None
+    assert session.user_id == None
+    assert session.cuppings == []
+
+
+_empty_strings = (
+    '',
+    '   ',
+    '\n',
+    '\t',
+    None,
+    False,
+    0,
+    [],
+    (),
+    {},
+)
+
+@pytest.mark.parametrize('empty_string', _empty_strings)
+def test_session_create_name_requires_string(empty_string):
+    with pytest.raises(ValueError) as e:
+        SessionFactory(name=empty_string)
+
+    assert 'name field must be a non-empty string' in str(e)
+
+
+@pytest.mark.parametrize('empty_string', _empty_strings)
+def test_session_create_form_name_requires_string(empty_string):
+    with pytest.raises(ValueError) as e:
+        SessionFactory(form_name=empty_string)
+
+    assert 'form_name field must be a non-empty string' in str(e)
+
+
+def test_session_create_account_id_requires_int():
+    with pytest.raises(ValueError) as e:
+        SessionFactory(account_id='abc')
+
+    assert 'account_id field must be an integer value' in str(e)
+
+
+def test_session_create_user_id_requires_int():
+    with pytest.raises(ValueError) as e:
+        SessionFactory(account_id='abc')
+
+    assert 'account_id field must be an integer value' in str(e)
 
 #
 # def test_session_create_name_required():
