@@ -2,8 +2,8 @@ import factory
 
 from factory.fuzzy import FuzzyChoice
 
-from cupping.models import Session
 from cupping.db import commit_session
+from cupping.persistence import Session
 
 
 class BaseFactory(factory.Factory):

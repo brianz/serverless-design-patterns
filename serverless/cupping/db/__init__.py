@@ -97,11 +97,13 @@ def close_db():
         __session.close()
 
 
-def commit_session():
+def commit_session(_raise=False):
     try:
         __session.commit()
-    except:
+    except Exception as e:
         __session.rollback()
+        if _raise:
+            raise
 
 
 def _get_metadata():

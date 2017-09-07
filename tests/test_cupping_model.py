@@ -5,12 +5,12 @@ from schematics.exceptions import DataError
 
 from helpers import prettify_schematics_errors
 
-from cupping.models import Cupping
+from cupping.models import CuppingModel
 
 
 def test_session_invalid_cupping_score():
     with pytest.raises(DataError) as e:
-        Cupping({
+        CuppingModel({
             'session_id': 10,
             'scores': {
                 'Aroma': 'abc',
@@ -28,7 +28,7 @@ def test_session_invalid_cupping_score():
 
 
 def test_session_overall_score_min_value():
-    c = Cupping({
+    c = CuppingModel({
         'session_id': 10,
         'scores': {},
         'overall_score': '-0.1',
@@ -43,7 +43,7 @@ def test_session_overall_score_min_value():
 
 
 def test_session_overall_score_max_value():
-    c = Cupping({
+    c = CuppingModel({
         'session_id': 10,
         'scores': {},
         'overall_score': '100.1',
@@ -58,7 +58,7 @@ def test_session_overall_score_max_value():
 
 
 def test_session_scores_required():
-    c = Cupping({
+    c = CuppingModel({
         'session_id': 10,
         'overall_score': '100',
     })
@@ -73,7 +73,7 @@ def test_session_scores_required():
 
 def test_session_invalid_overall_score():
     with pytest.raises(DataError) as e:
-        Cupping({
+        CuppingModel({
             'session_id': 10,
             'overall_score': 'abc',
         })

@@ -19,6 +19,10 @@ os.environ.update({
 })
 
 from cupping.models import (
+        CuppingModel,
+        SessionModel,
+)
+from cupping.persistence import (
         Cupping,
         Session,
 )
@@ -47,27 +51,30 @@ def pytest_runtest_teardown(item, nextitem):
 
 
 @pytest.fixture()
-def session():
-    return Session()
+def empty_session_model():
+    return SessionModel()
 
 
 @pytest.fixture()
-def valid_session():
-    return Session({
+def valid_session_model():
+    return SessionModel({
         'name': 'Test Session',
         'form_name': 'SCAA',
     })
 
 
 @pytest.fixture()
-def cuppings():
-    return [
-        Cupping({
-            'session_id': 10,
-            'scores': {
-                'Aroma': random.randint(1, 10),
-                'Flavor': random.randint(1, 10),
-            },
-            'overall_score': 88.5,
-        }) for i in range(3)
-    ]
+def cupping_model():
+    return CuppingModel({
+        'session_id': random.randint(1, 10000),
+        'scores': {
+            'Aroma': random.randint(1, 10),
+            'Flavor': random.randint(1, 10),
+        },
+        'overall_score': round(random.randint(50, 99) + random.random(), 1),
+    })
+
+
+@pytest.fixture()
+def cupping_models():
+    return [cupping_model() for i in range(3)]
