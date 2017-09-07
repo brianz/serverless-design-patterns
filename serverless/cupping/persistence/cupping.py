@@ -57,6 +57,13 @@ class Cupping(CuppingServiceBaseMixin, Base):
             return None
         if not isinstance(value, (list, tuple)):
             raise ValueError('%s must be a list of strings' % (key, ))
+
+        for _string in value:
+            try:
+                assert isinstance(_string, str)
+            except AssertionError:
+                raise ValueError('%s must be a list of strings' % (key, ))
+
         return [str(v).strip() for v in value]
 
     @validates('scores')
@@ -72,7 +79,10 @@ class Cupping(CuppingServiceBaseMixin, Base):
         if not isinstance(value, dict):
             raise ValueError('Scores must be a mapping of name to numeric value')
 
-        return {k: float(v) for k, v in value.items()}
+        try:
+            return {k: float(v) for k, v in value.items()}
+        except ValueError:
+            raise ValueError('Scores must be a mapping of name to numeric value')
 
     @validates('descriptors')
     def validate_descriptors(self, key, value):
