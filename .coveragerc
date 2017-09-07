@@ -1,0 +1,6 @@
+[run]
+branch = true
+omit = 
+    serverless/lib/*
+    tests/*
+    **/__pycache__/*

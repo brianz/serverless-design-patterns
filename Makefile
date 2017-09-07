@@ -61,6 +61,10 @@ else
 endif
 .PHONY: deploy
 
+tests : check-env
+	py.test --cov=serverless/ tests/
+.PHONY: tests
+
 
 check-env:
 ifndef ENV
