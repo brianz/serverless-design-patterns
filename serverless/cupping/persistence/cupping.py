@@ -52,6 +52,10 @@ class Cupping(CuppingServiceBaseMixin, Base):
     #: tells whether or not the object is a sample
     is_sample = Column(Boolean, default=False)
 
+    def __repr__(self):
+        return '<Cupping(id=%d, session_id=%d, overall_score=%s)>' % (
+                self.id, self.session_id, self.overall_score)
+
     def _validate_list_or_tuple(self, key, value):
         if not value:
             return None
@@ -93,9 +97,10 @@ class Cupping(CuppingServiceBaseMixin, Base):
         return self._validate_list_or_tuple(key, value)
 
     @classmethod
-    def from_model(cls, model):
+    def from_model(cls, model, session_id=None):
+        session_id = session_id or model.session_id
         cupping = cls(
-                session_id=model.session_id,
+                session_id=session_id,
                 scores=model.scores,
                 overall_score=model.overall_score,
                 descriptors=model.descriptors,

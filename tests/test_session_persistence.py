@@ -7,8 +7,7 @@ from cupping.db import (
         commit_session,
         get_session,
 )
-from cupping.models import CuppingModel
-from cupping.persistence import Cupping
+from cupping.persistence import Session
 
 from factories import SessionFactory
 
@@ -21,11 +20,26 @@ def session(cupping_model):
 def test_session_create(session):
     assert session.id
 
+
 def test_session_create_default_values(session):
     assert session.form_name
     assert session.account_id == None
     assert session.user_id == None
     assert session.cuppings == []
+
+def test_session_create_all_args(valid_session_model, cupping_models):
+    valid_session_model.cuppings = cupping_models
+    valid_session_model.account_id = 123
+    valid_session_model.user_id = 345
+    s = Session.from_model(valid_session_model)
+
+    assert s.id > 0
+    assert s.account_id == 123
+    assert s.user_id == 345
+
+    assert len(s.cuppings) == 3
+    for c in s.cuppings:
+        assert c.session.id == s.id
 
 
 _empty_strings = (
@@ -57,101 +71,34 @@ def test_session_create_form_name_requires_string(empty_string):
     assert 'form_name field must be a non-empty string' in str(e)
 
 
-def test_session_create_account_id_requires_int():
+_invalid_ints = (
+        'abc',
+        '0abc',
+        [],
+        [123],
+        0,
+        -1,
+)
+
+@pytest.mark.parametrize('invalid_int', _invalid_ints)
+def test_session_create_account_id_requires_int(invalid_int):
     with pytest.raises(ValueError) as e:
-        SessionFactory(account_id='abc')
+        SessionFactory(account_id=invalid_int)
 
-    assert 'account_id field must be an integer value' in str(e)
+    assert 'account_id field must be a positive integer value' in str(e)
 
 
-def test_session_create_user_id_requires_int():
+@pytest.mark.parametrize('invalid_int', _invalid_ints)
+def test_session_create_user_id_requires_int(invalid_int):
     with pytest.raises(ValueError) as e:
-        SessionFactory(account_id='abc')
+        SessionFactory(user_id=invalid_int)
 
-    assert 'account_id field must be an integer value' in str(e)
+    assert 'user_id field must be a positive integer value' in str(e)
 
-#
-# def test_session_create_name_required():
-#     with pytest.raises(ValueError) as e:
-#         Session.create({
-#                 'name': '',
-#                 'formName': 'myform',
-#         })
-#
-#
-# def test_session_create_form_name_required():
-#     with pytest.raises(ValueError) as e:
-#         Session.create({
-#                 'name': 'Session',
-#                 'formName': '',
-#         })
-#
-#
-# def test_session_create_account_id_requires_int():
-#     with pytest.raises(ValueError) as e:
-#         Session.create({
-#             'name': 'Test Session',
-#             'formName': 'SCAA',
-#             'accountId': 'abc123',
-#             'userId': 12345
-#         })
-#     assert 'account_id field must be an integer value' in str(e)
-#
-#
-# def test_session_create_user_id_requires_int():
-#     with pytest.raises(ValueError) as e:
-#         Session.create({
-#             'name': 'Test Session',
-#             'formName': 'SCAA',
-#             'accountId': '123',
-#             'userId': 'abc',
-#         })
-#     assert 'user_id field must be an integer value' in str(e)
-#
-#
-# def test_session_create_no_cuppings():
-#     s = Session.create({
-#             'name': 'Test Session',
-#             'formName': 'SCAA',
-#     })
-#     assert s.id
-#     assert s.name == 'Test Session'
-#     assert s.form_name == 'SCAA'
-#     assert s.cuppings == []
-#     assert s.account_id == None
-#     assert s.user_id == None
-#
-#
-# def test_session_create_cuppings():
-#     s = Session.create({
-#             'name': 'Test Session',
-#             'formName': 'SCAA',
-#             'cuppings': [
-#                 {
-#                     'scores': {'Aroma': 8, 'Flavor': 6},
-#                     'overallScore': 88.8,
-#                 },
-#                 {
-#                     'scores': {'Aroma': 6, 'Flavor': 7},
-#                     'overallScore': 75,
-#                 },
-#             ]
-#     })
-#     assert s.id
-#
-#     expected_overall = sorted([Decimal('88.8'), Decimal('75')])
-#     actual_overall = sorted([c.overall_score for c in s.cuppings])
-#     assert expected_overall == actual_overall
-#     assert [c.id for c in s.cuppings]
-#
-# def test_session_create_with_user_and_account():
-#     s = Session.create({
-#             'name': 'Test Session',
-#             'formName': 'SCAA',
-#             'accountId': '123',
-#             'userId': '555000',
-#     })
-#     assert s.id
-#     assert s.account_id == 123
-#     assert s.user_id == 555000
-#
+def test_session_create_account_id_none_ok():
+    s = SessionFactory(account_id=None)
+    assert s.account_id == None
+
+def test_session_create_user_id_none_ok():
+    s = SessionFactory(user_id=None)
+    assert s.user_id == None

@@ -62,7 +62,7 @@ endif
 .PHONY: deploy
 
 tests : check-env
-	py.test --cov=serverless/ tests/
+	py.test --cov=serverless/ --cov-report=html tests/
 .PHONY: tests
 
 

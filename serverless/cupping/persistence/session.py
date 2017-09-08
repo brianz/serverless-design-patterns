@@ -1,5 +1,7 @@
-from .base import CuppingServiceBaseMixin
+from ..db import dbtransaction
 from ..db.mixins import Base
+from .base import CuppingServiceBaseMixin
+from .cupping import Cupping
 
 from sqlalchemy.orm import relationship, validates
 
@@ -12,14 +14,6 @@ from sqlalchemy import (
                 String,
 )
 
-# class Session(Model):
-#     name = StringType(max_length=127, required=True)
-#     form_name = StringType(max_length=127, required=True)
-#     account_id = IntType()
-#     user_id = IntType()
-#
-#     cuppings = ListType(ModelType(Cupping))
-#
 
 class Session(CuppingServiceBaseMixin, Base):
     """A group of cuppings."""
@@ -36,10 +30,13 @@ class Session(CuppingServiceBaseMixin, Base):
     cuppings = relationship('Cupping', order_by='Cupping.id', back_populates='session')
 
     def _validate_integer(self, key, value):
-        try:
-            return int(value)
-        except ValueError:
-            raise ValueError('%s field must be an integer value' % (key, ))
+        if value is None:
+            return None
+        if not isinstance(value, int):
+            raise ValueError('%s field must be a positive integer value' % (key, ))
+        if value <= 0:
+            raise ValueError('%s field must be a positive integer value' % (key, ))
+        return value
 
     def _validate_string(self, key, value):
         if not isinstance(value, str) or not value.strip():
@@ -56,13 +53,11 @@ class Session(CuppingServiceBaseMixin, Base):
 
     @validates('account_id')
     def validate_account_id(self, key, value):
-        if value:
-            return self._validate_integer(key, value)
+        return self._validate_integer(key, value)
 
     @validates('user_id')
     def validate_user_id(self, key, value):
-        if value:
-            return self._validate_integer(key, value)
+        return self._validate_integer(key, value)
 
     @classmethod
     def from_model(cls, model):
@@ -77,7 +72,7 @@ class Session(CuppingServiceBaseMixin, Base):
             session.flush()
 
             cuppings = [
-                    Cupping.from_model(c) \
+                    Cupping.from_model(c, session_id=session.id) \
                     for c in model.get('cuppings', ())
             ]
 
