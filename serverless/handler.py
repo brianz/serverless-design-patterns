@@ -14,8 +14,8 @@ from cupping.exceptions import Http404
 def session(event, context):
     http_method = event['httpMethod']
 
-
     status_code = 200
+    response = {}
 
     try:
         response = handle_session(http_method, event)

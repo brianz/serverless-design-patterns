@@ -50,6 +50,6 @@
             "httpMethod": "POST",
             "apiId": "35rsazkuo0"
         },
-        "body": "{\n\t\"name\": \"Cupping session\",\n\t\"formName\": \"custom-form\",\n\t\"cuppings\": [\n\t\t{\n\t\t\t\"name\": \"Burundi\",\n\t\t\t\"id\": \"\",\n\t\t\t\"overallScore\": \"88.5\",\n\t\t\t\"scores\": {\n\t\t\t\t\"Aroma\": 8.6,\n\t\t\t\t\"Body\": 8,\n\t\t\t\t\"Flavor\": 10\n\t\t\t},\n\t\t\t\"notes\": \"This was pretty good\",\n\t\t\t\"descriptors\": [\"woody\", \"berries\"]\n\t\t},\n\t\t{\n\t\t\t\"name\": \"Ethiopia Yirgacheffe\",\n\t\t\t\"id\": \"eth-123\",\n\t\t\t\"overallScore\": \"90\",\n\t\t\t\"scores\": {\n\t\t\t\t\"Aroma\": 7,\n\t\t\t\t\"Body\": 7,\n\t\t\t\t\"Flavor\": 5.5\n\t\t\t},\n\t\t\t\"notes\": \"\",\n\t\t\t\"descriptors\": [\"blueberry\"]\n\t\t}\n\t]\n}",
+        "body": "{\n\t\"name\": \"Cupping session\",\n\t\"formName\": \"custom-form\",\n\t\"cuppings\": [\n\t\t{\n\t\t\t\"name\": \"Burundi\",\n\t\t\t\"overallScore\": \"88.5\",\n\t\t\t\"scores\": {\n\t\t\t\t\"Aroma\": 8.6,\n\t\t\t\t\"Body\": 8,\n\t\t\t\t\"Flavor\": 10\n\t\t\t},\n\t\t\t\"notes\": \"This was pretty good\",\n\t\t\t\"descriptors\": [\"woody\", \"berries\"]\n\t\t},\n\t\t{\n\t\t\t\"name\": \"Ethiopia Yirgacheffe\",\n\t\t\t\"overallScore\": \"90\",\n\t\t\t\"scores\": {\n\t\t\t\t\"Aroma\": 7,\n\t\t\t\t\"Body\": 7,\n\t\t\t\t\"Flavor\": 5.5\n\t\t\t},\n\t\t\t\"notes\": \"\",\n\t\t\t\"descriptors\": [\"blueberry\"]\n\t\t}\n\t]\n}",
         "isBase64Encoded": false
 }

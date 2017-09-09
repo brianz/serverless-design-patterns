@@ -1,9 +1,10 @@
 import json
 
 from ..models import (
-        Cupping,
-        Session,
+        CuppingModel,
+        SessionModel,
 )
+from ..persistence import Session
 from ..exceptions import Http404
 
 
@@ -17,7 +18,24 @@ def decode_json(fn):
 @decode_json
 def create_session(json_payload):
     print('Creating session', json_payload)
-    session = Session.create(json_payload)
+
+    cuppings = [{
+            'scores': c.get('scores', {}),
+            'overall_score': c.get('overallScore'),
+            'defects': c.get('defects'),
+            'descriptors': c.get('descriptors'),
+            'notes': c.get('notes'),
+            'is_sample': c.get('isSample'),
+        } for c in json_payload.get('cuppings', ())]
+
+    session_model = SessionModel({
+        'name': json_payload.get('name'),
+        'form_name': json_payload.get('formName'),
+        'account_id': json_payload.get('accountId'),
+        'user_id': json_payload.get('userId'),
+        'cuppings': cuppings,
+    })
+    session = Session.from_model(session_model)
     print('Created session: %s' % (session.id, ))
     return {
             'session': {

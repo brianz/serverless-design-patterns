@@ -49,7 +49,7 @@ def setup_db(*, is_test=False, **db_config):
     __engine = create_engine(connection_string, **connection_kwargs)
     print('Connected to: %s' % (__engine.url, ))
 
-    if not database_exists(__engine.url):
+    if not database_exists(__engine.url): # pragma: no cover
         print('Creating database: %s' % (__engine.url, ))
         create_database(__engine.url)
 
