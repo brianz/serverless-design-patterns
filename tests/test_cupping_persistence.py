@@ -89,7 +89,7 @@ def test_cupping_create_descriptors_requires_list(cupping_model_with_session):
     ('one', None),
 ))
 def test_cupping_create_descriptors_requires_list_of_strings(non_strings, cupping_model_with_session):
-    cupping_model_with_session.descriptors = 'yummy'
+    cupping_model_with_session.descriptors = non_strings
     with pytest.raises(ValueError) as e:
         Cupping.from_model(cupping_model_with_session)
 

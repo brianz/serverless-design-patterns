@@ -7,12 +7,36 @@ from ..models import (
 from ..persistence import Session
 from ..exceptions import Http404
 
+from schematics.exceptions import DataError
+
 
 def decode_json(fn):
     def _decode_json_from_payload(payload):
         json_payload = json.loads(payload['body'])
         return fn(json_payload)
     return _decode_json_from_payload
+
+
+def to_pretty_dict(d):
+    pretty = {}
+    import pdb; pdb.set_trace()
+    for k, v in d.items():
+        if hasattr(v, 'keys'):
+            v = dict(v)
+        pretty[k] = v
+
+    return pretty
+
+
+
+def prettify_schematics_errors(e):
+    errors = {}
+    for k, v in e.errors.items():
+        if hasattr(v, 'keys'):
+            errors[k] = to_pretty_dict(v)
+        else:
+            errors[k] = [str(e) for e in v]
+    return errors
 
 
 @decode_json
@@ -35,24 +59,34 @@ def create_session(json_payload):
         'user_id': json_payload.get('userId'),
         'cuppings': cuppings,
     })
-    session = Session.from_model(session_model)
-    print('Created session: %s' % (session.id, ))
-    return {
-            'session': {
-                'id': session.id,
-                'name': session.name,
-            }
-    }
+
+    errors = ['Unknown error']
+    response = {'errors': errors}
+
+    try:
+        session_model.validate()
+        session = Session.from_model(session_model)
+        print('Created session: %s' % (session.id, ))
+        return {
+                'session': {
+                    'id': session.id,
+                    'name': session.name,
+                }
+        }
+    except DataError as e:
+        errors = prettify_schematics_errors(e)
+    except Exception as e:
+        errors = [str(e)]
+
+    return {'errors': errors}
 
 
 def get_session(data):
-
+    print('Reading session', data)
     try:
         session_id = int(data.get('pathParameters', {}).get('id'))
     except ValueError:
         raise Http404('Invalid session id')
-
-    print('Reading session', data)
 
 
 

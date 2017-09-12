@@ -32,15 +32,6 @@ def session(event, context):
 
 
 if __name__ == '__main__':
-    # from cupping.models import *
-    # from cupping.db import (
-    #         _drop_tables,
-    #         create_tables,
-    #         setup_db,
-    # )
-    # setup_db()
-    # _drop_tables(force=True)
-    # create_tables()
-    with open ('../create-new-session.json', 'r') as fh:
+    with open ('../create-new-session-missing-data.json', 'r') as fh:
         event = json.loads(fh.read())
         session(event, None)
