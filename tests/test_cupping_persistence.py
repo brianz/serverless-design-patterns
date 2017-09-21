@@ -20,6 +20,11 @@ def cupping_model_with_session(cupping_model):
     return cupping_model
 
 
+def test_cupping_repr(cupping_model_with_session):
+    c = Cupping()
+    assert str(c)
+
+
 def test_cupping_create(cupping_model_with_session):
     cupping_model_with_session.descriptors = ['berry', 'fruit']
     cupping_model_with_session.defects = ['sour', '123']
@@ -57,7 +62,7 @@ def test_cupping_create_scores_requires_dict(cupping_model_with_session):
 
 
 def test_cupping_create_scores_requires_numeric_values(cupping_model_with_session):
-    cupping_model_with_session.scores = [{'Aroma': 8, 'Flavor': 'abc'}]
+    cupping_model_with_session.scores = {'Aroma': 8, 'Flavor': 'abc'}
     with pytest.raises(ValueError) as e:
         Cupping.from_model(cupping_model_with_session)
 
@@ -81,13 +86,15 @@ def test_cupping_create_descriptors_requires_list(cupping_model_with_session):
     assert 'descriptors must be a list of strings' in str(e)
 
 
-@pytest.mark.parametrize("non_strings", (
+_non_strings = (
     ('abc', 123),
     (123.4, ),
     ([], 'abc'),
     ('one', 'two', ['three'],),
     ('one', None),
-))
+)
+
+@pytest.mark.parametrize('non_strings', _non_strings)
 def test_cupping_create_descriptors_requires_list_of_strings(non_strings, cupping_model_with_session):
     cupping_model_with_session.descriptors = non_strings
     with pytest.raises(ValueError) as e:
@@ -96,8 +103,9 @@ def test_cupping_create_descriptors_requires_list_of_strings(non_strings, cuppin
     assert 'descriptors must be a list of strings' in str(e)
 
 
-def test_cupping_create_defects_requires_list(cupping_model_with_session):
-    cupping_model_with_session.defects = {'foo': 1}
+@pytest.mark.parametrize('non_strings', _non_strings)
+def test_cupping_create_defects_requires_list_of_strings(non_strings, cupping_model_with_session):
+    cupping_model_with_session.defects = non_strings
     with pytest.raises(ValueError) as e:
         Cupping.from_model(cupping_model_with_session)
 

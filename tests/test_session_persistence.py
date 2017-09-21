@@ -13,7 +13,7 @@ from factories import SessionFactory
 
 
 @pytest.fixture()
-def session(cupping_model):
+def session():
     return SessionFactory()
 
 
