@@ -7,7 +7,7 @@ from ..models import (
 from ..persistence import Session
 from ..exceptions import Http404
 
-from schematics.exceptions import DataError
+from schematics.exceptions import DataError, ConversionError
 
 
 def decode_json(fn):
@@ -19,10 +19,11 @@ def decode_json(fn):
 
 def to_pretty_dict(d):
     pretty = {}
-    import pdb; pdb.set_trace()
     for k, v in d.items():
         if hasattr(v, 'keys'):
-            v = dict(v)
+            v = to_pretty_dict(v)
+        elif isinstance(v, ConversionError):
+            v = ' '.join([str(i) for i in v])
         pretty[k] = v
 
     return pretty
@@ -63,8 +64,9 @@ def create_session(json_payload):
     errors = ['Unknown error']
     response = {'errors': errors}
 
+    import pdb; pdb.set_trace()
     try:
-        session_model.validate()
+        #session_model.validate()
         session = Session.from_model(session_model)
         print('Created session: %s' % (session.id, ))
         return {
