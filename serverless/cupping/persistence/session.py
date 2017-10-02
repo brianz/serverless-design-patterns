@@ -61,6 +61,7 @@ class Session(CuppingServiceBaseMixin, Base):
 
     @classmethod
     def from_model(cls, model):
+        model.validate()
         with dbtransaction():
             session = cls(
                     name=model.name,

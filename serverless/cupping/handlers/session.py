@@ -1,13 +1,15 @@
 import json
 
+from schematics.exceptions import DataError
+
+from .helpers import prettify_schematics_errors
+
 from ..models import (
         CuppingModel,
         SessionModel,
 )
 from ..persistence import Session
 from ..exceptions import Http404
-
-from schematics.exceptions import DataError, ConversionError
 
 
 def decode_json(fn):
@@ -16,28 +18,6 @@ def decode_json(fn):
         return fn(json_payload)
     return _decode_json_from_payload
 
-
-def to_pretty_dict(d):
-    pretty = {}
-    for k, v in d.items():
-        if hasattr(v, 'keys'):
-            v = to_pretty_dict(v)
-        elif isinstance(v, ConversionError):
-            v = ' '.join([str(i) for i in v])
-        pretty[k] = v
-
-    return pretty
-
-
-
-def prettify_schematics_errors(e):
-    errors = {}
-    for k, v in e.errors.items():
-        if hasattr(v, 'keys'):
-            errors[k] = to_pretty_dict(v)
-        else:
-            errors[k] = [str(e) for e in v]
-    return errors
 
 
 @decode_json
@@ -64,9 +44,7 @@ def create_session(json_payload):
     errors = ['Unknown error']
     response = {'errors': errors}
 
-    import pdb; pdb.set_trace()
     try:
-        #session_model.validate()
         session = Session.from_model(session_model)
         print('Created session: %s' % (session.id, ))
         return {

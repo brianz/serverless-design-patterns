@@ -3,7 +3,7 @@ import pytest
 from decimal import Decimal
 from schematics.exceptions import DataError
 
-from helpers import prettify_schematics_errors
+from cupping.handlers.helpers  import prettify_schematics_errors
 
 
 def test_session_create_name_required(empty_session_model):
@@ -14,7 +14,7 @@ def test_session_create_name_required(empty_session_model):
 
     errors = prettify_schematics_errors(e)
     assert errors == {
-            'name': ['This field is required.'],
+            'name': 'This field is required.',
     }
 
 
@@ -26,7 +26,7 @@ def test_session_create_form_name_required(empty_session_model):
 
     errors = prettify_schematics_errors(e)
     assert errors == {
-            'form_name': ['This field is required.'],
+            'form_name': 'This field is required.',
     }
 
 
@@ -38,7 +38,7 @@ def test_session_create_account_id_requires_int(valid_session_model):
 
     errors = prettify_schematics_errors(e)
     assert errors == {
-            'account_id': ["Value 'a123' is not int."],
+            'account_id': "Value 'a123' is not int.",
     }
 
 
@@ -50,7 +50,7 @@ def test_session_create_user_id_requires_int(valid_session_model):
 
     errors = prettify_schematics_errors(e)
     assert errors == {
-            'user_id': ["Value 'a123' is not int."],
+            'user_id': "Value 'a123' is not int.",
     }
 
 

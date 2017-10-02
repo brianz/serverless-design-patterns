@@ -53,8 +53,8 @@ class Cupping(CuppingServiceBaseMixin, Base):
     is_sample = Column(Boolean, default=False)
 
     def __repr__(self):
-        return '<Cupping(id=%d, session_id=%d, overall_score=%s)>' % (
-                self.id, self.session_id, self.overall_score)
+        return '<Cupping(id=%s, session_id=%s, overall_score=%s)>' % (
+                self.id or 'unsaved', self.session_id, self.overall_score)
 
     def _validate_list_or_tuple(self, key, value):
         if not value:

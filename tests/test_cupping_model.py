@@ -3,8 +3,7 @@ import pytest
 from decimal import Decimal
 from schematics.exceptions import DataError
 
-from helpers import prettify_schematics_errors
-
+from cupping.handlers.helpers  import prettify_schematics_errors
 from cupping.models import CuppingModel
 
 
@@ -22,7 +21,7 @@ def test_session_invalid_cupping_score():
     errors = prettify_schematics_errors(e)
     assert errors == {
            'scores': {
-               'Aroma': ["Number 'abc' failed to convert to a decimal."]
+               'Aroma': "Number 'abc' failed to convert to a decimal."
             }
     }
 
@@ -38,7 +37,7 @@ def test_session_overall_score_min_value():
 
     errors = prettify_schematics_errors(e)
     assert errors == {
-           'overall_score': ['Value should be greater than or equal to 0.']
+           'overall_score': 'Value should be greater than or equal to 0.'
     }
 
 
@@ -53,7 +52,7 @@ def test_session_overall_score_max_value():
 
     errors = prettify_schematics_errors(e)
     assert errors == {
-           'overall_score': ['Value should be less than or equal to 100.']
+           'overall_score': 'Value should be less than or equal to 100.'
     }
 
 
@@ -67,7 +66,7 @@ def test_session_scores_required():
 
     errors = prettify_schematics_errors(e)
     assert errors == {
-           'scores': ['This field is required.']
+           'scores': 'This field is required.'
     }
 
 
@@ -80,5 +79,5 @@ def test_session_invalid_overall_score():
 
     errors = prettify_schematics_errors(e)
     assert errors == {
-           'overall_score': ["Number 'abc' failed to convert to a decimal."]
+           'overall_score': "Number 'abc' failed to convert to a decimal."
     }

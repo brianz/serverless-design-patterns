@@ -10,7 +10,7 @@ from schematics.types import (
 
 
 class CuppingModel(Model):
-    session_id = IntType(required=True)
+    session_id = IntType()
     scores = DictType(DecimalType, required=True)
     overall_score = DecimalType(required=True, min_value=0, max_value=100)
     descriptors = ListType(StringType)
