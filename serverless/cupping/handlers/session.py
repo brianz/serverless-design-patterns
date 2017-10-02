@@ -19,7 +19,6 @@ def decode_json(fn):
     return _decode_json_from_payload
 
 
-
 @decode_json
 def create_session(json_payload):
     print('Creating session', json_payload)
@@ -33,18 +32,17 @@ def create_session(json_payload):
             'is_sample': c.get('isSample'),
         } for c in json_payload.get('cuppings', ())]
 
-    session_model = SessionModel({
-        'name': json_payload.get('name'),
-        'form_name': json_payload.get('formName'),
-        'account_id': json_payload.get('accountId'),
-        'user_id': json_payload.get('userId'),
-        'cuppings': cuppings,
-    })
-
     errors = ['Unknown error']
     response = {'errors': errors}
 
     try:
+        session_model = SessionModel({
+            'name': json_payload.get('name'),
+            'form_name': json_payload.get('formName'),
+            'account_id': json_payload.get('accountId'),
+            'user_id': json_payload.get('userId'),
+            'cuppings': cuppings,
+        })
         session = Session.from_model(session_model)
         print('Created session: %s' % (session.id, ))
         return {

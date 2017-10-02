@@ -34,18 +34,46 @@ def cuppings():
 @pytest.fixture()
 def payload(cuppings):
     return {
-        'body': json.dumps({
-            'name': 'Test cupping',
-            'formName': 'SCAA',
-            'accountId': 123,
-            'userId': 456,
-            'cuppings': cuppings,
-        })
+        'name': 'Test cupping',
+        'formName': 'SCAA',
+        'accountId': 123,
+        'userId': 456,
+        'cuppings': cuppings,
     }
 
 
 def test_create_session(payload):
-    from pprint import pprint as pp
-    #pp(payload)
+    payload = {'body': json.dumps(payload)}
     response = create_session(payload)
-    pp(response)
+    assert response['session']
+    assert response['session']['name'] == 'Test cupping'
+    assert response['session']['id'] >= 1
+
+
+def test_create_session_no_cuppings(payload):
+    payload.pop('cuppings')
+    payload = {'body': json.dumps(payload)}
+    response = create_session(payload)
+    assert response['session']
+    assert response['session']['name'] == 'Test cupping'
+    assert response['session']['id'] >= 1
+
+
+def test_create_session_missing_name(payload):
+    payload.pop('name')
+    payload = {'body': json.dumps(payload)}
+    response = create_session(payload)
+    assert response == {'errors': {'name': 'This field is required.'}}
+
+
+def test_create_session_missing_cupping_scores(payload):
+    payload['cuppings'][0]['scores'] = []
+    payload = {'body': json.dumps(payload)}
+    response = create_session(payload)
+    assert response == {
+        'errors': {
+            'cuppings': {
+                0: {'scores': 'Only mappings may be used in a DictType'}
+            }
+        }
+    }
