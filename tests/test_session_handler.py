@@ -50,6 +50,23 @@ def test_create_session(payload):
     assert response['session']['id'] >= 1
 
 
+
+_invalid_inputs = ('None', '0', 'stringy', '{}', '', '[]', '["abc"]', 'false')
+
+@pytest.mark.parametrize('data', _invalid_inputs)
+def test_create_session_invalid_data(data):
+    response = create_session({'body': data})
+    assert response == {'errors': 'Invalid input data'}
+
+
+def test_unhandled_exception(mocker, payload):
+    m_model = mocker.patch('cupping.handlers.session.create_session_from_json_payload')
+    m_model.side_effect = Exception('Ooops')
+    payload = {'body': json.dumps(payload)}
+    response = create_session(payload)
+    assert response == {'errors': ['Ooops']}
+
+
 def test_create_session_no_cuppings(payload):
     payload.pop('cuppings')
     payload = {'body': json.dumps(payload)}

@@ -2,61 +2,42 @@ import json
 
 from schematics.exceptions import DataError
 
-from .helpers import prettify_schematics_errors
+from .decorators import decode_json
+from .helpers import (
+        create_session_from_json_payload,
+        prettify_schematics_errors,
+)
 
 from ..models import (
         CuppingModel,
         SessionModel,
 )
 from ..persistence import Session
-from ..exceptions import Http404
-
-
-def decode_json(fn):
-    def _decode_json_from_payload(payload):
-        json_payload = json.loads(payload['body'])
-        return fn(json_payload)
-    return _decode_json_from_payload
+from ..exceptions import Http404, InvalidInputData
 
 
 @decode_json
 def create_session(json_payload):
+    if not json_payload or not hasattr(json_payload, 'get'):
+        return {'errors': 'Invalid input data'}
+
     print('Creating session', json_payload)
 
-    cuppings = [{
-            'scores': c.get('scores', {}),
-            'overall_score': c.get('overallScore'),
-            'defects': c.get('defects'),
-            'descriptors': c.get('descriptors'),
-            'notes': c.get('notes'),
-            'is_sample': c.get('isSample'),
-        } for c in json_payload.get('cuppings', ())]
-
-    errors = ['Unknown error']
-    response = {'errors': errors}
-
     try:
-        session_model = SessionModel({
-            'name': json_payload.get('name'),
-            'form_name': json_payload.get('formName'),
-            'account_id': json_payload.get('accountId'),
-            'user_id': json_payload.get('userId'),
-            'cuppings': cuppings,
-        })
-        session = Session.from_model(session_model)
+        session = create_session_from_json_payload(json_payload)
         print('Created session: %s' % (session.id, ))
-        return {
+        response = {
                 'session': {
                     'id': session.id,
                     'name': session.name,
                 }
         }
-    except DataError as e:
-        errors = prettify_schematics_errors(e)
+    except InvalidInputData as e:
+        response = {'errors': e.errors}
     except Exception as e:
-        errors = [str(e)]
+        response = {'errors': [str(e)]}
 
-    return {'errors': errors}
+    return response
 
 
 def get_session(data):

@@ -4,13 +4,12 @@ from schematics.exceptions import (
         ConversionError,
         DataError,
 )
-
-
-def decode_json(fn):
-    def _decode_json_from_payload(payload):
-        json_payload = json.loads(payload['body'])
-        return fn(json_payload)
-    return _decode_json_from_payload
+from ..exceptions import InvalidInputData
+from ..models import (
+        CuppingModel,
+        SessionModel,
+)
+from ..persistence import Session
 
 
 def to_pretty_dict(d):
@@ -41,3 +40,27 @@ def prettify_schematics_errors(e):
         else:
             pretty_errors[k] = ' '.join([str(e) for e in v])
     return pretty_errors
+
+
+def create_session_from_json_payload(json_payload):
+    cuppings = [{
+            'scores': c.get('scores', {}),
+            'overall_score': c.get('overallScore'),
+            'defects': c.get('defects'),
+            'descriptors': c.get('descriptors'),
+            'notes': c.get('notes'),
+            'is_sample': c.get('isSample'),
+        } for c in json_payload.get('cuppings', ())]
+
+    try:
+        session_model = SessionModel({
+            'name': json_payload.get('name'),
+            'form_name': json_payload.get('formName'),
+            'account_id': json_payload.get('accountId'),
+            'user_id': json_payload.get('userId'),
+            'cuppings': cuppings,
+        })
+        return Session.from_model(session_model)
+    except DataError as e:
+        errors = prettify_schematics_errors(e)
+        raise InvalidInputData(errors)
