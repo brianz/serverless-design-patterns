@@ -3,6 +3,7 @@ import json
 from schematics.exceptions import (
         ConversionError,
         DataError,
+        ValidationError,
 )
 from ..exceptions import InvalidInputData
 from ..models import (
@@ -17,7 +18,7 @@ def to_pretty_dict(d):
     for k, v in d.items():
         if hasattr(v, 'keys'):
             v = to_pretty_dict(v)
-        elif isinstance(v, ConversionError):
+        elif isinstance(v, (ConversionError, ValidationError)):
             v = ' '.join([str(i) for i in v])
         pretty[k] = v
 
@@ -43,14 +44,14 @@ def prettify_schematics_errors(e):
 
 
 def create_session_from_json_payload(json_payload):
-    cuppings = [{
+    cuppings = [CuppingModel({
             'scores': c.get('scores', {}),
             'overall_score': c.get('overallScore'),
             'defects': c.get('defects'),
             'descriptors': c.get('descriptors'),
             'notes': c.get('notes'),
             'is_sample': c.get('isSample'),
-        } for c in json_payload.get('cuppings', ())]
+        }) for c in json_payload.get('cuppings', ())]
 
     try:
         session_model = SessionModel({
@@ -60,6 +61,7 @@ def create_session_from_json_payload(json_payload):
             'user_id': json_payload.get('userId'),
             'cuppings': cuppings,
         })
+        session_model.validate()
         return Session.from_model(session_model)
     except DataError as e:
         errors = prettify_schematics_errors(e)

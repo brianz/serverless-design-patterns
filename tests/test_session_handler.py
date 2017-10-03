@@ -84,13 +84,13 @@ def test_create_session_missing_name(payload):
 
 
 def test_create_session_missing_cupping_scores(payload):
-    payload['cuppings'][0]['scores'] = []
+    payload['cuppings'][0].pop('scores')
     payload = {'body': json.dumps(payload)}
     response = create_session(payload)
     assert response == {
         'errors': {
             'cuppings': {
-                0: {'scores': 'Only mappings may be used in a DictType'}
+                0: {'scores': 'This field is required.'}
             }
         }
     }

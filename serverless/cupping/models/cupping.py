@@ -1,3 +1,4 @@
+from schematics.exceptions import ValidationError
 from schematics.models import Model
 from schematics.types import (
         BooleanType,
@@ -9,9 +10,16 @@ from schematics.types import (
 )
 
 
+class ScoresType(DictType):
+    def validate_nonempty(self, value):
+        if not value:
+            raise ValidationError('This field is required.')
+        return value
+
+
 class CuppingModel(Model):
     session_id = IntType()
-    scores = DictType(DecimalType, required=True)
+    scores = ScoresType(DecimalType, required=True)
     overall_score = DecimalType(required=True, min_value=0, max_value=100)
     descriptors = ListType(StringType)
     defects = ListType(StringType)

@@ -13,14 +13,6 @@ from sqlalchemy import (
                 String,
 )
 
-# class CuppingModel(Model):
-#     session_id = IntType(required=True)
-#     scores = DictType(DecimalType, required=True)
-#     overall_score = DecimalType(required=True, min_value=0, max_value=100)
-#     descriptors = ListType(StringType)
-#     defects = ListType(StringType)
-#     notes = StringType()
-
 
 class Cupping(CuppingServiceBaseMixin, Base):
     """An individual cupping for one object (roast)."""
