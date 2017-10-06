@@ -1,5 +1,3 @@
-import json
-
 from schematics.exceptions import (
         ConversionError,
         DataError,

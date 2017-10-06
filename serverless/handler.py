@@ -1,4 +1,4 @@
-import json
+import simplejson as json
 import sys
 
 from pathlib import Path
@@ -21,7 +21,11 @@ def session(event, context):
         response = handle_session(http_method, event)
     except Http404 as e:
         status_code = 404
-        response = {'error': str(e)}
+        response = {'errors': [str(e)]}
+    except Exception as e:
+        status_code = 500
+        # TODO - log error
+        response = {'errors': ['Unexpected server error']}
 
     response = {
         'statusCode': status_code,

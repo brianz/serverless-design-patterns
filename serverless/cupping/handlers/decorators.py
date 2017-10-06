@@ -1,4 +1,4 @@
-import json
+import simplejson as json
 
 
 def decode_json(fn):

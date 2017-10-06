@@ -1,5 +1,3 @@
-import json
-
 from schematics.exceptions import DataError
 
 from .decorators import decode_json
@@ -19,7 +17,7 @@ from ..exceptions import Http404, InvalidInputData
 @decode_json
 def create_session(json_payload):
     if not json_payload or not hasattr(json_payload, 'get'):
-        return {'errors': 'Invalid input data'}
+        return {'errors': ['Invalid input data']}
 
     print('Creating session', json_payload)
 
@@ -34,8 +32,6 @@ def create_session(json_payload):
         }
     except InvalidInputData as e:
         response = {'errors': e.errors}
-    except Exception as e:
-        response = {'errors': [str(e)]}
 
     return response
 

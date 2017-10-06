@@ -4,12 +4,32 @@ import pytest
 from factories import SessionFactory, CuppingFactory
 
 from cupping.exceptions import Http404
-from cupping.handlers.session import (
-        create_session,
-        get_session,
-        update_session,
-        delete_session,
+
+import handler
+
+from helpers import (
+        assert_200,
+        assert_404,
+        assert_500,
+        get_body_from_response,
 )
+
+
+def create_session(payload):
+    if not isinstance(payload, str):
+        payload = json.dumps(payload)
+    event = {'httpMethod': 'POST', 'body': payload}
+    return handler.session(event, None)
+
+
+def get_session(payload):
+    if isinstance(payload, dict):
+        payload['httpMethod'] = 'GET'
+        event = payload
+    else:
+        event = {'httpMethod': 'GET', 'pathParameters': payload}
+
+    return handler.session(event, None)
 
 
 @pytest.fixture()
@@ -48,54 +68,70 @@ def payload(cuppings):
 # POST session
 
 def test_create_session(payload):
-    payload = {'body': json.dumps(payload)}
     response = create_session(payload)
-    assert response['session']
-    assert response['session']['name'] == 'Test cupping'
-    assert response['session']['id'] >= 1
+    assert_200(response)
+    body = get_body_from_response(response)
+    assert body['session']
+    assert body['session']['name'] == 'Test cupping'
+    assert body['session']['id'] >= 1
 
 
 
-_invalid_inputs = ('None', '0', 'stringy', '{}', '', '[]', '["abc"]', 'false')
+_invalid_inputs = (None, 0, 'stringy', {}, '', [], ["abc"], False)
 
 @pytest.mark.parametrize('data', _invalid_inputs)
 def test_create_session_invalid_data(data):
-    response = create_session({'body': data})
-    assert response == {'errors': 'Invalid input data'}
+    response = create_session(data)
+    assert_200(response)
+    body = get_body_from_response(response)
+    assert body == {'errors': ['Invalid input data']}
 
 
 def test_unhandled_exception(mocker, payload):
+    m_handler = mocker.patch.object(handler, 'handle_session')
+    m_handler.side_effect = Exception('Ooops')
+    response = create_session(payload)
+    assert_500(response)
+    body = get_body_from_response(response)
+    assert body == {'errors': ['Unexpected server error']}
+
+
+def test_deep_unhandled_exception(mocker, payload):
     m_model = mocker.patch('cupping.handlers.session.create_session_from_json_payload')
     m_model.side_effect = Exception('Ooops')
-    payload = {'body': json.dumps(payload)}
     response = create_session(payload)
-    assert response == {'errors': ['Ooops']}
+    assert_500(response)
+    body = get_body_from_response(response)
+    assert body == {'errors': ['Unexpected server error']}
 
 
 def test_create_session_no_cuppings(payload):
     payload.pop('cuppings')
-    payload = {'body': json.dumps(payload)}
     response = create_session(payload)
-    assert response['session']
-    assert response['session']['name'] == 'Test cupping'
-    assert response['session']['id'] >= 1
+    assert_200(response)
+    body = get_body_from_response(response)
+    assert body['session']
+    assert body['session']['name'] == 'Test cupping'
+    assert body['session']['id'] >= 1
 
 
 def test_create_session_missing_name(payload):
     payload.pop('name')
-    payload = {'body': json.dumps(payload)}
     response = create_session(payload)
-    assert response == {'errors': {'name': 'This field is required.'}}
+    assert_200(response)
+    body = get_body_from_response(response)
+    assert body == {'errors': {'name': 'This field is required.'}}
 
 
 def test_create_session_missing_cupping_scores(payload):
     payload['cuppings'][0].pop('scores')
-    payload = {'body': json.dumps(payload)}
     response = create_session(payload)
-    assert response == {
+    assert_200(response)
+    body = get_body_from_response(response)
+    assert body == {
         'errors': {
             'cuppings': {
-                0: {'scores': 'This field is required.'}
+                '0': {'scores': 'This field is required.'}
             }
         }
     }
@@ -108,8 +144,10 @@ def test_get_session():
     cuppings = CuppingFactory.create_batch(2, session_id=session.id)
 
     response = get_session({'pathParameters': {'id': session.id}})
+    assert_200(response)
+    body = get_body_from_response(response)
 
-    return_session =  response.get('session')
+    return_session =  body.get('session')
     assert return_session
     assert return_session['id'] == session.id
     assert len(return_session['cuppings']) == 2
@@ -118,28 +156,35 @@ def test_get_session():
     assert session_ids == set((session.id, ))
 
 
-def test_get_nonexistent_session():
-    with pytest.raises(Http404) as e:
-        get_session({'pathParameters': {'id': 23423423}})
-    assert 'Invalid session id' in str(e)
+@pytest.fixture
+def invalid_session_response():
+    return {'errors': ['Invalid session id']}
+
+
+def test_get_nonexistent_session(invalid_session_response):
+    payload = {'pathParameters': {'id': 23423423}}
+    response = get_session(payload)
+    assert response['statusCode'] == 404
+    body = get_body_from_response(response)
+    assert body == invalid_session_response
 
 
 _invalid_session_ids = (None, 'abc', [], 0, ('123',))
 
 @pytest.mark.parametrize('session_id', _invalid_session_ids)
-def test_get_invalid_session(session_id):
-    with pytest.raises(Http404) as e:
-        get_session({'pathParameters': {'id': session_id}})
-    assert 'Invalid session id' in str(e)
+def test_get_invalid_session(session_id, invalid_session_response):
+    payload = {'pathParameters': {'id': session_id}}
+    response = get_session(payload)
+    assert response['statusCode'] == 404
+    body = get_body_from_response(response)
+    assert body == invalid_session_response
 
 
 _invalid_data = ({}, [], None, '', {'foo': 123}, {'pathParameters': None})
 
 @pytest.mark.parametrize('data', _invalid_data)
-def test_get_bad_data(data):
-    with pytest.raises(Http404) as e:
-        get_session(data)
-    assert 'Invalid session id' in str(e)
-
-
-
+def test_get_bad_data(data, invalid_session_response):
+    response = get_session(data)
+    assert response['statusCode'] == 404
+    body = get_body_from_response(response)
+    assert body == invalid_session_response

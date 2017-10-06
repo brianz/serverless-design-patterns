@@ -4,6 +4,12 @@ import handler
 
 from cupping.exceptions import Http404
 
+from helpers import (
+        assert_200,
+        assert_404,
+        get_body_from_response,
+)
+
 
 @pytest.fixture()
 def mock_handler(mocker):
@@ -15,22 +21,19 @@ def mock_handler(mocker):
 def test_session_hanlder_get(mock_handler):
     event = {'httpMethod': 'GET'}
     response = handler.session(event, None)
+    assert_200(response)
+    body = get_body_from_response(response)
 
-    assert response == {
-            'statusCode': 200,
-            'body': '{"test_passed": true}',
-    }
+    assert body == {'test_passed': True}
     mock_handler.assert_called_once_with('GET', event)
 
 
 def test_session_hanlder_post(mock_handler):
     event = {'httpMethod': 'POST'}
     response = handler.session(event, None)
-
-    assert response == {
-            'statusCode': 200,
-            'body': '{"test_passed": true}',
-    }
+    assert_200(response)
+    body = get_body_from_response(response)
+    assert body == {'test_passed': True}
     mock_handler.assert_called_once_with('POST', event)
 
 
@@ -40,9 +43,7 @@ def test_session_hanlder_404(mocker):
 
     event = {'httpMethod': 'POST'}
     response = handler.session(event, None)
-
-    assert response == {
-            'statusCode': 404,
-            'body': '{"error": "Test 404 error"}',
-    }
+    assert_404(response)
+    body = get_body_from_response(response)
+    assert body == {'errors': ['Test 404 error']}
     mock_handler.assert_called_once_with('POST', event)
