@@ -26,7 +26,7 @@ def test_session_create_form_name_required(empty_session_model):
 
     errors = prettify_schematics_errors(e)
     assert errors == {
-            'form_name': 'This field is required.',
+            'formName': 'This field is required.',
     }
 
 
@@ -38,7 +38,7 @@ def test_session_create_account_id_requires_int(valid_session_model):
 
     errors = prettify_schematics_errors(e)
     assert errors == {
-            'account_id': "Value 'a123' is not int.",
+            'accountId': "Value 'a123' is not int.",
     }
 
 
@@ -50,7 +50,7 @@ def test_session_create_user_id_requires_int(valid_session_model):
 
     errors = prettify_schematics_errors(e)
     assert errors == {
-            'user_id': "Value 'a123' is not int.",
+            'userId': "Value 'a123' is not int.",
     }
 
 

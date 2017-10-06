@@ -18,7 +18,7 @@ def cuppings():
             'defects': ['stank', 'pu'],
             'descriptors': ['honey', 'berry', 'mungy'],
             'notes': 'Pretty good with elements of stank',
-            'isSammple': False,
+            'isSample': False,
         },
         {
             'scores': {'Aroma': 5.6, 'Flavor': 8.4},
@@ -26,7 +26,7 @@ def cuppings():
             'defects': [],
             'descriptors': [],
             'notes': '',
-            'isSammple': False,
+            'isSample': False,
         },
     ]
 
@@ -41,6 +41,8 @@ def payload(cuppings):
         'cuppings': cuppings,
     }
 
+
+# POST session
 
 def test_create_session(payload):
     payload = {'body': json.dumps(payload)}
@@ -92,5 +94,21 @@ def test_create_session_missing_cupping_scores(payload):
             'cuppings': {
                 0: {'scores': 'This field is required.'}
             }
+        }
+    }
+
+
+# GET session
+
+from factories import SessionFactory
+
+def test_get_session():
+    session = SessionFactory()
+    response = get_session({'pathParameters': {'id': session.id}})
+
+    assert response == {
+        'session': {
+            'id': session.id,
+            'name': session.name,
         }
     }

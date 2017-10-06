@@ -44,23 +44,11 @@ def prettify_schematics_errors(e):
 
 
 def create_session_from_json_payload(json_payload):
-    cuppings = [CuppingModel({
-            'scores': c.get('scores', {}),
-            'overall_score': c.get('overallScore'),
-            'defects': c.get('defects'),
-            'descriptors': c.get('descriptors'),
-            'notes': c.get('notes'),
-            'is_sample': c.get('isSample'),
-        }) for c in json_payload.get('cuppings', ())]
+    cuppings = [CuppingModel(c) for c in json_payload.get('cuppings', ())]
+    json_payload['cuppings'] = cuppings
 
     try:
-        session_model = SessionModel({
-            'name': json_payload.get('name'),
-            'form_name': json_payload.get('formName'),
-            'account_id': json_payload.get('accountId'),
-            'user_id': json_payload.get('userId'),
-            'cuppings': cuppings,
-        })
+        session_model = SessionModel(json_payload)
         session_model.validate()
         return Session.from_model(session_model)
     except DataError as e:

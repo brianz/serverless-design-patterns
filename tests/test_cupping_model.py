@@ -37,7 +37,7 @@ def test_cupping_overall_score_min_value():
 
     errors = prettify_schematics_errors(e)
     assert errors == {
-           'overall_score': 'Value should be greater than or equal to 0.'
+           'overallScore': 'Value should be greater than or equal to 0.'
     }
 
 
@@ -52,7 +52,7 @@ def test_cupping_overall_score_max_value():
 
     errors = prettify_schematics_errors(e)
     assert errors == {
-           'overall_score': 'Value should be less than or equal to 100.'
+           'overallScore': 'Value should be less than or equal to 100.'
     }
 
 
@@ -94,5 +94,5 @@ def test_cupping_invalid_overall_score():
 
     errors = prettify_schematics_errors(e)
     assert errors == {
-           'overall_score': "Number 'abc' failed to convert to a decimal."
+           'overallScore': "Number 'abc' failed to convert to a decimal."
     }

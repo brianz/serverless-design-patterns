@@ -12,7 +12,7 @@ from ..models import (
         CuppingModel,
         SessionModel,
 )
-from ..persistence import Session
+from ..persistence import Session, queries
 from ..exceptions import Http404, InvalidInputData
 
 
@@ -46,6 +46,18 @@ def get_session(data):
         session_id = int(data.get('pathParameters', {}).get('id'))
     except ValueError:
         raise Http404('Invalid session id')
+
+    session = queries.get_session_by_id(session_id)
+    if session is None:
+        raise Http404('Invalid session id')
+
+    return {
+            'session': {
+                'id': session.id,
+                'name': session.name,
+            }
+    }
+
 
 
 
