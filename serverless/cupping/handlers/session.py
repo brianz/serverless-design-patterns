@@ -51,6 +51,9 @@ def get_session(data):
     if session is None:
         raise Http404('Invalid session id')
 
+    model = SessionModel({k: v for k, v in session.__dict__.items() if not k.startswith('_')})
+    print(model.to_native())
+    return model.to_native()
     return {
             'session': {
                 'id': session.id,
