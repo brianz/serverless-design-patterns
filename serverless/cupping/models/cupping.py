@@ -26,3 +26,8 @@ class CuppingModel(Model):
     defects = ListType(StringType)
     notes = StringType()
     is_sample = BooleanType(default=False, serialized_name='isSample')
+
+    @staticmethod
+    def from_row(cupping):
+        attrs = {k: v for k, v in cupping.__dict__.items() if not k.startswith('_')}
+        return CuppingModel(attrs, strict=False)

@@ -44,24 +44,15 @@ def get_session(data):
     print('Reading session', data)
     try:
         session_id = int(data.get('pathParameters', {}).get('id'))
-    except ValueError:
+    except (AttributeError, TypeError, ValueError):
         raise Http404('Invalid session id')
 
     session = queries.get_session_by_id(session_id)
     if session is None:
         raise Http404('Invalid session id')
 
-    model = SessionModel({k: v for k, v in session.__dict__.items() if not k.startswith('_')})
-    print(model.to_native())
-    return model.to_native()
-    return {
-            'session': {
-                'id': session.id,
-                'name': session.name,
-            }
-    }
-
-
+    model = SessionModel.from_row(session)
+    return {'session': model.to_native()}
 
 
 @decode_json

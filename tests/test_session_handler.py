@@ -1,6 +1,9 @@
 import json
 import pytest
 
+from factories import SessionFactory, CuppingFactory
+
+from cupping.exceptions import Http404
 from cupping.handlers.session import (
         create_session,
         get_session,
@@ -100,15 +103,43 @@ def test_create_session_missing_cupping_scores(payload):
 
 # GET session
 
-from factories import SessionFactory
-
 def test_get_session():
     session = SessionFactory()
+    cuppings = CuppingFactory.create_batch(2, session_id=session.id)
+
     response = get_session({'pathParameters': {'id': session.id}})
 
-    assert response == {
-        'session': {
-            'id': session.id,
-            'name': session.name,
-        }
-    }
+    return_session =  response.get('session')
+    assert return_session
+    assert return_session['id'] == session.id
+    assert len(return_session['cuppings']) == 2
+
+    session_ids = set(c['session_id'] for c in return_session['cuppings'])
+    assert session_ids == set((session.id, ))
+
+
+def test_get_nonexistent_session():
+    with pytest.raises(Http404) as e:
+        get_session({'pathParameters': {'id': 23423423}})
+    assert 'Invalid session id' in str(e)
+
+
+_invalid_session_ids = (None, 'abc', [], 0, ('123',))
+
+@pytest.mark.parametrize('session_id', _invalid_session_ids)
+def test_get_invalid_session(session_id):
+    with pytest.raises(Http404) as e:
+        get_session({'pathParameters': {'id': session_id}})
+    assert 'Invalid session id' in str(e)
+
+
+_invalid_data = ({}, [], None, '', {'foo': 123}, {'pathParameters': None})
+
+@pytest.mark.parametrize('data', _invalid_data)
+def test_get_bad_data(data):
+    with pytest.raises(Http404) as e:
+        get_session(data)
+    assert 'Invalid session id' in str(e)
+
+
+
