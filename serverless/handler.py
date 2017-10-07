@@ -1,4 +1,3 @@
-import simplejson as json
 import sys
 
 from pathlib import Path
@@ -6,6 +5,8 @@ from pathlib import Path
 # Munge our sys path so libs can be found
 CWD = Path(__file__).resolve().cwd() / 'lib'
 sys.path.insert(0, str(CWD))
+
+import simplejson as json
 
 from cupping.handlers.session import handle_session
 from cupping.exceptions import Http404

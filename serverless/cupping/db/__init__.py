@@ -86,7 +86,7 @@ def get_connection_string(**kwargs):
     )
 
 
-def close_db():
+def close_db(): # pragma: no cover
     if not __session:
         return
     try:
@@ -97,7 +97,7 @@ def close_db():
         __session.close()
 
 
-def commit_session(_raise=False):
+def commit_session(_raise=False): # pragma: no cover
     try:
         __session.commit()
     except Exception as e:
@@ -151,7 +151,7 @@ def get_session(**kwargs):
     if __session is not None:
         return __session
 
-    if __session_factory is None:
+    if __session_factory is None: # pragma: no cover
         __session_factory = sessionmaker(bind=__engine, **kwargs)
 
     __session = __session_factory()
@@ -167,7 +167,7 @@ def session_getter(func):
 
 
 @contextmanager
-def dbtransaction():
+def dbtransaction(): # pragma: no cover
     s = get_session()
     yield s
     try:

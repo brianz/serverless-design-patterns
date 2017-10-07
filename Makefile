@@ -25,7 +25,13 @@ attach : check-env
 
 postgres : check-env
 	docker run -d -p 5432:5432 --name cupping-$(ENV)-postgres postgres
-.PHONY: postgres
+
+start-db : check-env
+	docker start $(shell docker ps -a | grep cupping-$(ENV)-postgres | awk '{print $$1}')
+
+stop-db : check-env
+	docker stop $(shell docker ps | grep cupping-$(ENV)-postgres | awk '{print $$1}')
+.PHONY: postgres, start-db, stop-db
 
 env-dir :
 	@test -d $(ENVDIR) || mkdir -p $(ENVDIR)

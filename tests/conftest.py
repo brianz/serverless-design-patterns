@@ -14,7 +14,6 @@ sys.path.append(str(lib_dir))
 
 os.environ.update({
     'CUPPING_DB_PASSWORD': '',
-    'CUPPING_DB_HOST': 'cupping-dev-postgres',
     'CUPPING_DB_USERNAME': 'postgres',
 })
 
