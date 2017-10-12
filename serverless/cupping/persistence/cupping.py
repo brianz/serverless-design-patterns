@@ -21,6 +21,9 @@ class Cupping(CuppingServiceBaseMixin, Base):
     #: the `Session` this cupping is a part of
     session_id = Column(Integer, ForeignKey('sessions.id'), nullable=False)
 
+    #: The name of this coffee that was cupped
+    name = Column(String(length=127))
+
     # `Cupping.session` refers to a `Session` instance, and on the other side, `Session.cuppings`
     # refers to a list of `Cupping` instances.
     session = relationship('Session', back_populates='cuppings')
@@ -45,8 +48,8 @@ class Cupping(CuppingServiceBaseMixin, Base):
     is_sample = Column(Boolean, default=False)
 
     def __repr__(self):
-        return '<Cupping(id=%s, session_id=%s, overall_score=%s)>' % (
-                self.id or 'unsaved', self.session_id, self.overall_score)
+        return '<Cupping(id=%s, name=%s, session_id=%s, overall_score=%s)>' % (
+                self.id or 'unsaved', self.name, self.session_id, self.overall_score)
 
     def _validate_list_or_tuple(self, key, value):
         if not value:
@@ -93,6 +96,7 @@ class Cupping(CuppingServiceBaseMixin, Base):
         session_id = session_id or model.session_id
         cupping = cls(
                 session_id=session_id,
+                name=model.name,
                 scores=model.scores,
                 overall_score=model.overall_score,
                 descriptors=model.descriptors,

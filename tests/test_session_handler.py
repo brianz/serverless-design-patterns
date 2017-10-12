@@ -36,6 +36,7 @@ def get_session(payload):
 def cuppings():
     return [
         {
+            'name': 'Huehue',
             'scores': {'Aroma': 8.6, 'Flavor': 5.5},
             'overallScore': 75,
             'defects': ['stank', 'pu'],
@@ -44,6 +45,7 @@ def cuppings():
             'isSample': False,
         },
         {
+            'name': 'Kochere',
             'scores': {'Aroma': 5.6, 'Flavor': 8.4},
             'overallScore': 85,
             'defects': [],
@@ -188,3 +190,9 @@ def test_get_bad_data(data, invalid_session_response):
     assert response['statusCode'] == 404
     body = get_body_from_response(response)
     assert body == invalid_session_response
+
+
+# DELETE session
+
+
+# PUT session

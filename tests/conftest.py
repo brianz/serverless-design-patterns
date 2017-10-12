@@ -65,6 +65,7 @@ def valid_session_model():
 @pytest.fixture()
 def cupping_model():
     return CuppingModel({
+        'name': random.choice(('Guat', 'Kochere', 'Costa Rica', 'Brazilian')),
         'session_id': random.randint(1, 10000),
         'scores': {
             'Aroma': random.randint(1, 10),

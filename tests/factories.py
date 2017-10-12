@@ -53,5 +53,6 @@ class CuppingFactory(BaseFactory):
     class Meta:
         model = Cupping
 
+    name = factory.Sequence(lambda n: u'Coffee %d' % n)
     scores = FuzzyAttribute(_generate_scores)
     overall_score = FuzzyDecimal(60, 100, precision=1)

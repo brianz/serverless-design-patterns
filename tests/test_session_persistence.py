@@ -27,6 +27,7 @@ def test_session_create_default_values(session):
     assert session.user_id == None
     assert session.cuppings == []
 
+
 def test_session_create_all_args(valid_session_model, cupping_models):
     valid_session_model.cuppings = cupping_models
     valid_session_model.account_id = 123

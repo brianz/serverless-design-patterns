@@ -30,6 +30,7 @@ def test_cupping_create(cupping_model_with_session):
     cupping_model_with_session.defects = ['sour', '123']
     cupping_model_with_session.notes = 'pretty good'
     cupping_model_with_session.is_sample = True
+    cupping_model_with_session.name = 'Test Coffee'
 
     cupping = Cupping.from_model(cupping_model_with_session)
     commit_session(_raise=True)
@@ -42,12 +43,14 @@ def test_cupping_create(cupping_model_with_session):
     assert cupping.defects == ['sour', '123']
     assert cupping.notes == 'pretty good'
     assert cupping.is_sample == True
+    assert cupping.name == 'Test Coffee'
 
 
 def test_cupping_create_default_values(cupping_model_with_session):
     cupping = Cupping.from_model(cupping_model_with_session)
     commit_session(_raise=True)
 
+    assert cupping.name
     assert cupping.defects == None
     assert cupping.descriptors == None
     assert cupping.is_sample == False
