@@ -14,7 +14,6 @@ provider:
       Fn::GetAtt:
         - RDSPostgresInstance
         - Endpoint.Address
-          # SECRET_VAR: ${env:SECRET_VAR}
   vpc:
     securityGroupIds:
       - Fn::GetAtt: ServerlessSecurityGroup.GroupId
@@ -41,31 +40,9 @@ package:
     - "*.pyc"
     - "*.swp"
 
-#arn:aws:iam::*:role/coffee-cupping-dev-us-east-1-lambdaRole
-
 
 resources:
   Resources:
-    # EnvironmentVariableKMSKey:
-    #   Type: AWS::KMS::Key
-    #   Properties:
-    #     Description: Key for use in encrypting/decrytping environment variables
-    #     KeyPolicy:
-    #       Version: 2012-10-17
-    #       Id: serverless-${env:ENV}-cupping-key
-    #       Statement:
-    #         - Sid: Allow use of the key
-    #           Effect: Allow
-    #           Principal:
-    #             AWS:
-    #               Fn::GetAtt: [ IamRoleLambdaExecution, Arn ]
-    #           Action:
-    #             - "kms:Encrypt"
-    #             - "kms:Decrypt"
-    #             - "kms:ReEncrypt*"
-    #             - "kms:GenerateDataKey*"
-    #             - "kms:DescribeKey"
-    #           Resource: "*"
     ServerlessSecurityGroup:
       Type: AWS::EC2::SecurityGroup
       Properties:
