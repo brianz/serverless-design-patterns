@@ -14,6 +14,11 @@ from ..persistence import Session, queries
 from ..exceptions import Http404, InvalidInputData
 
 
+def get_sessions(data):
+    print(data)
+    return {'sessions': []}
+
+
 @decode_json
 def create_session(json_payload):
     if not json_payload or not hasattr(json_payload, 'get'):
@@ -37,6 +42,7 @@ def create_session(json_payload):
 
 
 def get_session(data):
+    """Get a single session"""
     print('Reading session', data)
     try:
         session_id = int(data.get('pathParameters', {}).get('id'))
@@ -60,14 +66,19 @@ def delete_session(data):
     print('Deleting session', data)
 
 
-method_map = {
-        'GET': get_session,
-        'POST': create_session,
-        'PUT': update_session,
-        'DELETE': delete_session,
-}
-
-
 def handle_session(http_method, payload):
+    method_map = {
+            'GET': get_sessions,
+            'POST': create_session,
+    }
+    method = http_method.upper()
+    return method_map[method](payload)
+
+
+def handle_session_detail(http_method, payload):
+    method_map = {
+            'GET': get_session,
+            'DELETE': delete_session,
+    }
     method = http_method.upper()
     return method_map[method](payload)

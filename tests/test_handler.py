@@ -37,12 +37,12 @@ def test_session_hanlder_post(mock_handler):
     mock_handler.assert_called_once_with('POST', event)
 
 
-def test_session_hanlder_404(mocker):
-    mock_handler = mocker.patch('handler.handle_session')
+def test_session_detail_hanlder_404(mocker):
+    mock_handler = mocker.patch('handler.handle_session_detail')
     mock_handler.side_effect = Http404('Test 404 error')
 
     event = {'httpMethod': 'POST'}
-    response = handler.session(event, None)
+    response = handler.session_detail(event, None)
     assert_404(response)
     body = get_body_from_response(response)
     assert body == {'errors': ['Test 404 error']}

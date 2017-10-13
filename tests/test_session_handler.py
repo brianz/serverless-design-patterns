@@ -22,14 +22,14 @@ def create_session(payload):
     return handler.session(event, None)
 
 
-def get_session(payload):
+def get_session_detail(payload):
     if isinstance(payload, dict):
         payload['httpMethod'] = 'GET'
         event = payload
     else:
         event = {'httpMethod': 'GET', 'pathParameters': payload}
 
-    return handler.session(event, None)
+    return handler.session_detail(event, None)
 
 
 @pytest.fixture()
@@ -145,7 +145,7 @@ def test_get_session():
     session = SessionFactory()
     cuppings = CuppingFactory.create_batch(2, session_id=session.id)
 
-    response = get_session({'pathParameters': {'id': session.id}})
+    response = get_session_detail({'pathParameters': {'id': session.id}})
     assert_200(response)
     body = get_body_from_response(response)
 
@@ -165,7 +165,7 @@ def invalid_session_response():
 
 def test_get_nonexistent_session(invalid_session_response):
     payload = {'pathParameters': {'id': 23423423}}
-    response = get_session(payload)
+    response = get_session_detail(payload)
     assert response['statusCode'] == 404
     body = get_body_from_response(response)
     assert body == invalid_session_response
@@ -176,7 +176,7 @@ _invalid_session_ids = (None, 'abc', [], 0, ('123',))
 @pytest.mark.parametrize('session_id', _invalid_session_ids)
 def test_get_invalid_session(session_id, invalid_session_response):
     payload = {'pathParameters': {'id': session_id}}
-    response = get_session(payload)
+    response = get_session_detail(payload)
     assert response['statusCode'] == 404
     body = get_body_from_response(response)
     assert body == invalid_session_response
@@ -186,7 +186,7 @@ _invalid_data = ({}, [], None, '', {'foo': 123}, {'pathParameters': None})
 
 @pytest.mark.parametrize('data', _invalid_data)
 def test_get_bad_data(data, invalid_session_response):
-    response = get_session(data)
+    response = get_session_detail(data)
     assert response['statusCode'] == 404
     body = get_body_from_response(response)
     assert body == invalid_session_response
