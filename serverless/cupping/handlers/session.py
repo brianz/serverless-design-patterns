@@ -41,9 +41,7 @@ def create_session(json_payload):
     return response
 
 
-def get_session(data):
-    """Get a single session"""
-    print('Reading session', data)
+def _get_session_from_path_parameters(data):
     try:
         session_id = int(data.get('pathParameters', {}).get('id'))
     except (AttributeError, TypeError, ValueError):
@@ -53,17 +51,22 @@ def get_session(data):
     if session is None:
         raise Http404('Invalid session id')
 
+    return session
+
+
+def get_session(data):
+    """Get a single session"""
+    print('Reading session', data)
+    session = _get_session_from_path_parameters(data)
     model = SessionModel.from_row(session)
     return {'session': model.to_native()}
 
 
-@decode_json
-def update_session(json_payload):
-    print('Updating session', json_payload)
-
-
 def delete_session(data):
     print('Deleting session', data)
+    session = _get_session_from_path_parameters(data)
+    model = SessionModel.from_row(session)
+    return {'session': {'deleted': True}}
 
 
 def handle_session(http_method, payload):

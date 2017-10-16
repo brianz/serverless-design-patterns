@@ -22,14 +22,22 @@ def create_session(payload):
     return handler.session(event, None)
 
 
-def get_session_detail(payload):
+def _handle_session(payload, http_method):
     if isinstance(payload, dict):
-        payload['httpMethod'] = 'GET'
+        payload['httpMethod'] = http_method
         event = payload
     else:
-        event = {'httpMethod': 'GET', 'pathParameters': payload}
+        event = {'httpMethod': http_method, 'pathParameters': payload}
 
     return handler.session_detail(event, None)
+
+
+def get_session_detail(payload):
+    return _handle_session(payload, 'GET')
+
+
+def delete_session(payload):
+    return _handle_session(payload, 'DELETE')
 
 
 @pytest.fixture()
@@ -193,6 +201,9 @@ def test_get_bad_data(data, invalid_session_response):
 
 
 # DELETE session
-
-
-# PUT session
+def test_delete_session():
+    session = SessionFactory()
+    cuppings = CuppingFactory.create_batch(2, session_id=session.id)
+    payload = {'pathParameters': {'id': session.id}}
+    response = delete_session(payload)
+    print(response)
