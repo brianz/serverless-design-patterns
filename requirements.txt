@@ -4,3 +4,5 @@ schematics
 simplejson
 sqlalchemy-utils
 sqlalchemy>=1.2.0b2
+
+git+https://github.com/graphql-python/graphene-sqlalchemy.git@08a0072  
