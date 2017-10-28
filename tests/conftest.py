@@ -15,6 +15,7 @@ sys.path.append(str(lib_dir))
 os.environ.update({
     'CUPPING_DB_PASSWORD': '',
     'CUPPING_DB_USERNAME': 'postgres',
+    'CUPPING_DB_HOST': 'cupping-dev-postgres',
 })
 
 from cupping.models import (
@@ -26,9 +27,11 @@ from cupping.persistence import (
         Session,
 )
 from cupping.db import (
+        _clear_tables,
         _drop_tables,
         close_db,
         get_session,
+        commit_session,
         setup_db,
 )
 
@@ -42,6 +45,11 @@ def pytest_unconfigure(config):
     """Called at the end of a test run"""
     close_db()
     _drop_tables()
+
+
+def pytest_runtest_setup(item):
+    """Called at teh start of single test"""
+    _clear_tables()
 
 
 def pytest_runtest_teardown(item, nextitem):
@@ -78,3 +86,38 @@ def cupping_model():
 @pytest.fixture()
 def cupping_models():
     return [cupping_model() for i in range(3)]
+
+
+@pytest.fixture()
+def cuppings_dicts():
+    return [
+        {
+            'name': 'Huehue',
+            'scores': {'Aroma': 8.6, 'Flavor': 5.5},
+            'overallScore': 75,
+            'defects': ['stank', 'pu'],
+            'descriptors': ['honey', 'berry', 'mungy'],
+            'notes': 'Pretty good with elements of stank',
+            'isSample': False,
+        },
+        {
+            'name': 'Kochere',
+            'scores': {'Aroma': 5.6, 'Flavor': 8.4},
+            'overallScore': 85,
+            'defects': [],
+            'descriptors': [],
+            'notes': '',
+            'isSample': False,
+        },
+    ]
+
+
+@pytest.fixture()
+def session_dict(cuppings_dicts):
+    return {
+        'name': 'Test cupping',
+        'formName': 'SCAA',
+        'accountId': 123,
+        'userId': 456,
+        'cuppings': cuppings_dicts,
+    }

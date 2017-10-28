@@ -72,9 +72,10 @@ class Session(CuppingServiceBaseMixin, Base):
             session.save()
             session.flush()
 
+
             cuppings = [
                     Cupping.from_model(c, session_id=session.id) \
-                    for c in model.get('cuppings', ())
+                    for c in model.get('cuppings') or ()
             ]
 
             return session

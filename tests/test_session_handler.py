@@ -40,45 +40,11 @@ def delete_session(payload):
     return _handle_session(payload, 'DELETE')
 
 
-@pytest.fixture()
-def cuppings():
-    return [
-        {
-            'name': 'Huehue',
-            'scores': {'Aroma': 8.6, 'Flavor': 5.5},
-            'overallScore': 75,
-            'defects': ['stank', 'pu'],
-            'descriptors': ['honey', 'berry', 'mungy'],
-            'notes': 'Pretty good with elements of stank',
-            'isSample': False,
-        },
-        {
-            'name': 'Kochere',
-            'scores': {'Aroma': 5.6, 'Flavor': 8.4},
-            'overallScore': 85,
-            'defects': [],
-            'descriptors': [],
-            'notes': '',
-            'isSample': False,
-        },
-    ]
-
-
-@pytest.fixture()
-def payload(cuppings):
-    return {
-        'name': 'Test cupping',
-        'formName': 'SCAA',
-        'accountId': 123,
-        'userId': 456,
-        'cuppings': cuppings,
-    }
-
 
 # POST session
 
-def test_create_session(payload):
-    response = create_session(payload)
+def test_create_session(session_dict):
+    response = create_session(session_dict)
     assert_200(response)
     body = get_body_from_response(response)
     assert body['session']
@@ -97,27 +63,27 @@ def test_create_session_invalid_data(data):
     assert body == {'errors': ['Invalid input data']}
 
 
-def test_unhandled_exception(mocker, payload):
+def test_unhandled_exception(mocker, session_dict):
     m_handler = mocker.patch.object(handler, 'handle_session')
     m_handler.side_effect = Exception('Ooops')
-    response = create_session(payload)
+    response = create_session(session_dict)
     assert_500(response)
     body = get_body_from_response(response)
     assert body == {'errors': ['Unexpected server error']}
 
 
-def test_deep_unhandled_exception(mocker, payload):
+def test_deep_unhandled_exception(mocker, session_dict):
     m_model = mocker.patch('cupping.handlers.session.create_session_from_json_payload')
     m_model.side_effect = Exception('Ooops')
-    response = create_session(payload)
+    response = create_session(session_dict)
     assert_500(response)
     body = get_body_from_response(response)
     assert body == {'errors': ['Unexpected server error']}
 
 
-def test_create_session_no_cuppings(payload):
-    payload.pop('cuppings')
-    response = create_session(payload)
+def test_create_session_no_cuppings(session_dict):
+    session_dict.pop('cuppings')
+    response = create_session(session_dict)
     assert_200(response)
     body = get_body_from_response(response)
     assert body['session']
@@ -125,17 +91,17 @@ def test_create_session_no_cuppings(payload):
     assert body['session']['id'] >= 1
 
 
-def test_create_session_missing_name(payload):
-    payload.pop('name')
-    response = create_session(payload)
+def test_create_session_missing_name(session_dict):
+    session_dict.pop('name')
+    response = create_session(session_dict)
     assert_200(response)
     body = get_body_from_response(response)
     assert body == {'errors': {'name': 'This field is required.'}}
 
 
-def test_create_session_missing_cupping_scores(payload):
-    payload['cuppings'][0].pop('scores')
-    response = create_session(payload)
+def test_create_session_missing_cupping_scores(session_dict):
+    session_dict['cuppings'][0].pop('scores')
+    response = create_session(session_dict)
     assert_200(response)
     body = get_body_from_response(response)
     assert body == {
