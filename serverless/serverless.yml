@@ -87,6 +87,15 @@ resources:
 
 
 functions:
+  GraphQL:
+    handler: handler.graphql
+    events:
+      - http:
+          path: graphql
+          method: get
+      - http:
+          path: graphql
+          method: post
   HandleSession:
     handler: handler.session
     events:

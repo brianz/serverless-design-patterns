@@ -12,6 +12,8 @@ from cupping.handlers.session import (
         handle_session,
         handle_session_detail,
 )
+from cupping.handlers.graphql import handle_graphql
+
 from cupping.exceptions import Http404
 
 
@@ -61,7 +63,16 @@ def session_detail(event, context):
     return response
 
 
-if __name__ == '__main__':
-    with open ('../create-new-session-missing-data.json', 'r') as fh:
-        event = json.loads(fh.read())
-        session(event, None)
+def graphql(event, context):
+    http_method = event['httpMethod']
+
+    response = handle_graphql(http_method, event)
+    status_code = 200
+
+    response = {
+        'statusCode': status_code,
+        'body': json.dumps(response),
+    }
+
+
+    return response

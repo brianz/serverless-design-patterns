@@ -3,6 +3,8 @@ from graphene.relay import Node
 
 from graphene_sqlalchemy import SQLAlchemyObjectType
 
+from .decorators import decode_json
+
 from ..persistence.cupping import Cupping
 from ..persistence.session import Session
 from ..persistence.queries import get_sessions, get_cuppings
@@ -12,20 +14,8 @@ from ..models import SessionModel
 from schematics.exceptions import DataError
 
 
-class CuppingObject(SQLAlchemyObjectType):
-    class Meta:
-        model = Cupping
-        #interfaces = (Node, )
-
-
-
-class SessionObject(SQLAlchemyObjectType):
-    class Meta:
-        model = Session
-        #interfaces = (Node, )
-
-
 def create_session_from_json_payload(json_payload):
+    # TODO, handle errors a bit better, perhaps?
     #cuppings = [CuppingModel(c) for c in json_payload.get('cuppings', ())]
     #json_payload['cuppings'] = cuppings
 
@@ -38,6 +28,14 @@ def create_session_from_json_payload(json_payload):
     #     raise InvalidInputData(errors)
 
 
+class CuppingObject(SQLAlchemyObjectType):
+    class Meta:
+        model = Cupping
+
+
+class SessionObject(SQLAlchemyObjectType):
+    class Meta:
+        model = Session
 
 
 class CuppingInput(graphene.InputObjectType):
@@ -50,7 +48,7 @@ class CuppingInput(graphene.InputObjectType):
     is_sample = graphene.Boolean()
 
 
-class CreateSession(graphene.Mutation):
+class CreateSessionMutation(graphene.Mutation):
 
     class Arguments:
         name = graphene.String()
@@ -63,15 +61,12 @@ class CreateSession(graphene.Mutation):
     session = graphene.Field(SessionObject)
 
     def mutate(self, info, *args, **kwargs):
-        #import pdb; pdb.set_trace()
         session = create_session_from_json_payload(kwargs)
-        ok = True
-
-        return CreateSession(session=session, ok=ok)
+        return CreateSessionMutation(session=session, ok=True)
 
 
 class Mutation(graphene.ObjectType):
-    create_session = CreateSession.Field()
+    create_session = CreateSessionMutation.Field()
 
 
 class Query(graphene.ObjectType):
@@ -89,4 +84,24 @@ class Query(graphene.ObjectType):
         return get_sessions(**filters)
 
 
-schema = graphene.Schema(query=Query, mutation=Mutation, types=[CuppingObject, SessionObject])
+# Global schema which will handle queries and mutations
+schema = graphene.Schema(
+        query=Query,
+        mutation=Mutation,
+        types=[CuppingObject, SessionObject],
+)
+
+
+@decode_json
+def _handle_graphql(payload):
+    print(payload)
+    query = payload['query']
+    variables = payload.get('variables', {})
+    result = schema.execute(query, variable_values=variables)
+    if result.errors:
+        return result.errors
+    return result.data
+
+
+def handle_graphql(http_method, payload):
+    return _handle_graphql(payload)
