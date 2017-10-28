@@ -1,3 +1,4 @@
+import json
 import pytest
 
 from cupping.handlers.graphql import schema
@@ -162,33 +163,79 @@ def test_query_cuppings_by_session_id():
     """
     result = schema.execute(query, variable_values={'session_id': session.id})
     assert not result.errors
-    pp(result.data)
 
     cuppings = result.data['cuppings']
     assert len(cuppings) == 1
     assert cuppings[0]['id'] == str(cupping.id)
 
 
-# Create new session
+@pytest.fixture()
+def graphql_cupping_mutation(session_dict):
+    # Transform cuppings array from dict to GraphQL mutation
+    cuppings_mutation = []
+    for cupping in session_dict['cuppings']:
+        cupping['scores'] = json.dumps(cupping['scores']).replace('"', '\\"')
 
-def test_create_session(session_dict):
-    pp(session_dict)
+        _quoted_descriptors = ['"%s"' % d for d in cupping['descriptors']]
+        cupping['descriptors'] = ' '.join(_quoted_descriptors)
+
+        _quoted_defects = ['"%s"' % d for d in cupping['defects']]
+        cupping['defects'] = ' '.join(_quoted_defects)
+
+        cupping['isSample'] = 'true' if cupping['isSample'] else 'false'
+
+        cuppings_mutation.append("""
+            {
+                name: "%(name)s"
+                overallScore: %(overallScore)s
+                scores: "%(scores)s"
+                notes: "%(notes)s"
+                isSample: %(isSample)s
+                defects: [ %(defects)s ]
+                descriptors : [ %(descriptors)s ]
+            }
+            """ % cupping
+        )
+
+    return ','.join(cuppings_mutation)
+
+
+def test_create_session(graphql_cupping_mutation):
     query = """
     mutation SessionCreator {
         createSession (
             name: "GraphQL Test"
             formName: "GraphQL Form"
-            accountId: "abc123"
+            cuppings: [
+                %s
+            ]
         ) {
             ok
             session {
                 id
                 name
                 formName
+                cuppings {
+                    sessionId
+                    name
+                    overallScore
+                    scores
+                    defects
+                }
             }
         }
     }
-    """
+    """ % (graphql_cupping_mutation, )
+
     result = schema.execute(query)
-    pp(result.errors)
-    pp(result.data)
+    assert not result.errors
+
+    data = result.data['createSession']
+    assert data['ok'] == True
+    session = data['session']
+    assert session['name'] == "GraphQL Test"
+    assert session['formName'] == "GraphQL Form"
+    cuppings = session['cuppings']
+    assert len(cuppings) == 2
+    assert cuppings[0]['sessionId'] == session['id']
+    assert cuppings[1]['sessionId'] == session['id']

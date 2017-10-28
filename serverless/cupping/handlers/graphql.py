@@ -38,27 +38,33 @@ def create_session_from_json_payload(json_payload):
     #     raise InvalidInputData(errors)
 
 
+
+
+class CuppingInput(graphene.InputObjectType):
+    name = graphene.String(required=True)
+    scores = graphene.types.json.JSONString()
+    overall_score = graphene.Float(required=True)
+    notes = graphene.String()
+    descriptors = graphene.List(graphene.String)
+    defects = graphene.List(graphene.String)
+    is_sample = graphene.Boolean()
+
+
 class CreateSession(graphene.Mutation):
 
     class Arguments:
         name = graphene.String()
         form_name = graphene.String()
-        account_id = graphene.ID()
-        user_id = graphene.ID()
+        account_id = graphene.Int()
+        user_id = graphene.Int()
+        cuppings = graphene.List(CuppingInput)
 
     ok = graphene.Boolean()
     session = graphene.Field(SessionObject)
 
     def mutate(self, info, *args, **kwargs):
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         session = create_session_from_json_payload(kwargs)
-        # session = SessionObject(
-        #     name=name,
-        #     form_name=reporter_id,
-        # )
-        #
-        # session.add(new_article)
-        # session.commit()
         ok = True
 
         return CreateSession(session=session, ok=ok)
