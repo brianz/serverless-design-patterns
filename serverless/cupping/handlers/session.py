@@ -15,8 +15,9 @@ from ..exceptions import Http404, InvalidInputData
 
 
 def get_sessions(data):
-    print(data)
-    return {'sessions': []}
+    sessions = queries.get_sessions()
+    models = [SessionModel.from_row(s) for s in queries.get_sessions()]
+    return {'sessions': [m.to_native() for m in models]}
 
 
 @decode_json
