@@ -16,6 +16,10 @@ from cupping.handlers.graphql import handle_graphql
 
 from cupping.exceptions import Http404
 
+CORS_HEADERS = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': True
+}
 
 def session(event, context):
     """/session endpoint for POST or GET"""
@@ -33,7 +37,8 @@ def session(event, context):
 
     response = {
         'statusCode': status_code,
-        'body': json.dumps(response)
+        'body': json.dumps(response),
+        'headers': CORS_HEADERS,
     }
 
     return response
@@ -57,7 +62,8 @@ def session_detail(event, context):
 
     response = {
         'statusCode': status_code,
-        'body': json.dumps(response)
+        'body': json.dumps(response),
+        'headers': CORS_HEADERS,
     }
 
     return response
@@ -72,6 +78,7 @@ def graphql(event, context):
     response = {
         'statusCode': status_code,
         'body': json.dumps(response),
+        'headers': CORS_HEADERS,
     }
 
 

@@ -93,24 +93,29 @@ functions:
       - http:
           path: graphql
           method: get
+          cors: true
       - http:
           path: graphql
           method: post
+          cors: true
   HandleSession:
     handler: handler.session
     events:
       - http:
           path: session
           method: get
+          cors: true
       - http:
           path: session
           method: post
+          cors: true
   HandleSessionDetail:
     handler: handler.session_detail
     events:
       - http:
           path: session/{id}
           method: get
+          cors: true
           request:
             parameters:
               paths:
@@ -118,6 +123,7 @@ functions:
       - http:
           path: session/{id}
           method: delete
+          cors: true
           request:
             parameters:
               paths:

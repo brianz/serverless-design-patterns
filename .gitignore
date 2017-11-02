@@ -4,3 +4,4 @@ envs/
 .cache/
 .coverage
 htmlcov
+node_modues
