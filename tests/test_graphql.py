@@ -1,7 +1,7 @@
 import json
 import pytest
 
-from cupping.handlers.graphql import schema
+from cupping.handlers.graphql import schema, handle_graphql
 from factories import (
         CuppingFactory,
         SessionFactory,
@@ -10,6 +10,10 @@ from factories import (
 from pprint import pprint as pp
 
 # Getting sessions
+
+def _build_gql_payload(query, **variables):
+    return {'body': json.dumps({'query': query, 'variables': variables})}
+
 
 def test_get_all_sessions():
     SessionFactory.create_batch(3)
@@ -23,9 +27,8 @@ def test_get_all_sessions():
           }
     }
     '''
-    result = schema.execute(query)
-    assert not result.errors
-    sessions = result.data['sessions']
+    result = handle_graphql('GET', _build_gql_payload(query))
+    sessions = result['sessions']
     assert len(sessions) == 3
 
 
@@ -42,9 +45,8 @@ def test_get_single_session():
           }
     }
     """
-    result = schema.execute(query, variable_values={'id': session.id})
-    assert not result.errors
-    sessions = result.data['sessions']
+    result = handle_graphql('GET', _build_gql_payload(query, id=session.id))
+    sessions = result['sessions']
     assert len(sessions) == 1
     assert sessions[0]['id'] == str(session.id)
 
@@ -65,13 +67,32 @@ def test_get_session_by_account_id():
           }
     }
     """
-    result = schema.execute(query, variable_values={'accountId': 888})
-    assert not result.errors
-    sessions = result.data['sessions']
+    result = handle_graphql('GET', _build_gql_payload(query, accountId=888))
+    sessions = result['sessions']
     assert len(sessions) == 1
     s = sessions[0]
     assert s['id'] == str(session.id)
     assert s['accountId'] == 888
+
+
+def test_query_error():
+    """Raise an error by not passing in a required param"""
+    query = """
+    query allSessions($accountId: Int!) {
+          sessions(accountId: $accountId) {
+            id
+            accountId
+            cuppings {
+                id
+                name
+                overallScore
+            }
+          }
+    }
+    """
+    result = handle_graphql('GET', _build_gql_payload(query))
+    expected_error = ['Variable "$accountId" of required type "Int!" was not provided.']
+    assert result.get('errors') == expected_error
 
 
 def test_get_invalid_session():
@@ -83,9 +104,8 @@ def test_get_invalid_session():
           }
     }
     """
-    result = schema.execute(query, variable_values={'accountId': 888})
-    assert not result.errors
-    sessions = result.data['sessions']
+    result = handle_graphql('GET', _build_gql_payload(query, accountId=888))
+    sessions = result['sessions']
     assert len(sessions) == 0
 
 
@@ -113,10 +133,8 @@ def test_get_all_sessions_with_cuppings():
           }
     }
     """
-    result = schema.execute(query, variable_values={'withCuppings': True})
-    assert not result.errors
-
-    sessions = result.data['sessions']
+    result = handle_graphql('GET', _build_gql_payload(query, withCuppings=True))
+    sessions = result['sessions']
     assert len(sessions) == 3
 
     for s in sessions:
@@ -134,16 +152,19 @@ def test_get_all_cuppings():
             id
             name
             scores
+            sessionId
         }
     }
     """
-    result = schema.execute(query)
-    assert not result.errors
-    pp(result.data)
-
+    result = handle_graphql('GET', _build_gql_payload(query))
+    cuppings = result['cuppings']
+    assert len(cuppings) == 3
+    assert [c['sessionId'] for c in cuppings] == [session.id] * 3
+    assert len(set((c['id'] for c in cuppings))) == 3
 
 
 def test_query_cuppings_by_session_id():
+    # create one session and 3 cuppings which should not be returned
     s = SessionFactory(account_id=12345)
     CuppingFactory.create_batch(3, session_id=s.id)
 
@@ -151,22 +172,22 @@ def test_query_cuppings_by_session_id():
     # returned from our query.
     session = SessionFactory(account_id=12345)
     cupping = CuppingFactory(session_id=session.id)
-    # the query Cupping(param is jus tused to pass down the cuppings query below
+
     query = """
     query Cuppings($session_id: Int!) {
         cuppings(sessionId: $session_id) {
             id
             name
             scores
+            sessionId
         }
     }
     """
-    result = schema.execute(query, variable_values={'session_id': session.id})
-    assert not result.errors
-
-    cuppings = result.data['cuppings']
+    result = handle_graphql('GET', _build_gql_payload(query, session_id=session.id))
+    cuppings = result['cuppings']
     assert len(cuppings) == 1
     assert cuppings[0]['id'] == str(cupping.id)
+    assert cuppings[0]['sessionId'] == session.id
 
 
 @pytest.fixture()
@@ -227,10 +248,9 @@ def test_create_session(graphql_cupping_mutation):
     }
     """ % (graphql_cupping_mutation, )
 
-    result = schema.execute(query)
-    assert not result.errors
+    result = handle_graphql('GET', _build_gql_payload(query))
 
-    data = result.data['createSession']
+    data = result['createSession']
     assert data['ok'] == True
     session = data['session']
     assert session['name'] == "GraphQL Test"
@@ -335,9 +355,6 @@ def test_query():
             }
           }
     """
-
     result = schema.execute(query)
     assert not result.errors
     pp(result.data)
-
-

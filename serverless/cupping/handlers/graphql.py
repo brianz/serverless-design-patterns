@@ -94,14 +94,15 @@ schema = graphene.Schema(
 
 @decode_json
 def _handle_graphql(payload):
-    print(payload)
     query = payload['query']
     variables = payload.get('variables', {})
     result = schema.execute(query, variable_values=variables)
-    if result.errors:
-        return result.errors
-    return result.data
+    success = True if not result.errors else False
+    return success, result
 
 
 def handle_graphql(http_method, payload):
-    return _handle_graphql(payload)
+    success, result = _handle_graphql(payload)
+    if not success:
+        return {'errors': [str(e) for e in result.errors]}
+    return result.data
