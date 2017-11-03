@@ -1,5 +1,5 @@
+import json
 import graphene
-from graphene.relay import Node
 
 from graphene_sqlalchemy import SQLAlchemyObjectType
 
@@ -104,5 +104,12 @@ def _handle_graphql(payload):
 def handle_graphql(http_method, payload):
     success, result = _handle_graphql(payload)
     if not success:
-        return {'errors': [str(e) for e in result.errors]}
+        errors = []
+        for e in result.errors:
+            try:
+                e = json.loads(e.message)
+            except:
+                e = str(e)
+            errors.append(e)
+        return {'errors': errors}
     return result.data

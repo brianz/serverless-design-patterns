@@ -5,3 +5,4 @@ envs/
 .coverage
 htmlcov
 node_modues
+npm-debug.log

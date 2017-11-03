@@ -261,6 +261,32 @@ def test_create_session(graphql_cupping_mutation):
     assert cuppings[1]['sessionId'] == int(session['id'])
 
 
+def test_create_session_error(graphql_cupping_mutation):
+    query = """
+    mutation SessionCreator {
+        createSession (
+            cuppings: [
+                %s
+            ]
+        ) {
+            ok
+        }
+    }
+    """ % (graphql_cupping_mutation, )
+
+    result = handle_graphql('GET', _build_gql_payload(query))
+
+    errors = result.get('errors')
+
+    expected_errors = [
+        {
+            'formName': ['This field is required.'],
+            'name': ['This field is required.']
+        }
+    ]
+    assert errors == expected_errors
+
+
 def test_query():
     query = """
           query IntrospectionQuery {
