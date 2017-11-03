@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { Breadcrumb, Table } from 'semantic-ui-react'
-
-const BASE_URL = 'https://flcb7j3bj6.execute-api.us-west-2.amazonaws.com/rltest'
+import { BASE_URL } from './constants'
 
 
 class CuppingTableRow extends Component {
