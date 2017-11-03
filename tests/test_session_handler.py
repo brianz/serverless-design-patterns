@@ -126,7 +126,10 @@ def test_get_session():
     return_session =  body.get('session')
     assert return_session
     assert return_session['id'] == session.id
+
     assert len(return_session['cuppings']) == 2
+    cupping_ids = set(c['id'] for c in return_session['cuppings'])
+    assert len(cupping_ids) == 2
 
     session_ids = set(c['session_id'] for c in return_session['cuppings'])
     assert session_ids == set((session.id, ))

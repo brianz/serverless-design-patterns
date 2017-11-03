@@ -37,7 +37,7 @@ class CuppingScoreRow extends Component {
     return (
         <Table.Row>
           <Table.Cell>{cupping.name}</Table.Cell>
-          { scores.map(name => <Table.Cell>{cupping.scores[name]}</Table.Cell>) }
+          { scores.map(name => <Table.Cell key={name}>{cupping.scores[name]}</Table.Cell>) }
           <Table.Cell>{cupping.overallScore}</Table.Cell>
         </Table.Row>
     )
@@ -106,14 +106,13 @@ export default class CuppingTable extends Component {
   sessionDetail() {
     const session = this.state.session
     const scores = getSortedScores(session.cuppings[0].scores)
-    console.log(session.cuppings[0])
     return (
       <Table celled basic>
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell>Coffee</Table.HeaderCell>
             { scores.map(name =>
-                <Table.HeaderCell>{name}</Table.HeaderCell>)
+                <Table.HeaderCell key={name}>{name}</Table.HeaderCell>)
             }
             <Table.HeaderCell>Overall Score</Table.HeaderCell>
           </Table.Row>
@@ -122,7 +121,9 @@ export default class CuppingTable extends Component {
         <Table.Body>
           { session.cuppings.map(cupping =>
             <CuppingScoreRow
-                cupping={cupping} />)
+                cupping={cupping}
+                key={cupping.id}
+            />)
           }
         </Table.Body>
       </Table>

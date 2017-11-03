@@ -18,6 +18,7 @@ class ScoresType(DictType):
 
 
 class CuppingModel(Model):
+    id = IntType()
     session_id = IntType()
     name = StringType(max_length=128, min_length=1, required=True)
     scores = ScoresType(DecimalType, required=True)

@@ -12,10 +12,11 @@ lib_dir = CWD / '../serverless/lib'
 sys.path.append(str(code_dir))
 sys.path.append(str(lib_dir))
 
+ENV = os.environ['ENV']
 os.environ.update({
     'CUPPING_DB_PASSWORD': '',
     'CUPPING_DB_USERNAME': 'postgres',
-    'CUPPING_DB_HOST': 'cupping-dev-postgres',
+    'CUPPING_DB_HOST': 'cupping-%s-postgres' % ENV,
 })
 
 from cupping.models import (

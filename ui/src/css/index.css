@@ -8,3 +8,7 @@ body {
 .main-container {
   height: 100%;
 }
+
+#main-content {
+  margin: 0;
+}

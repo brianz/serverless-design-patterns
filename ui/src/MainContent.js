@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 
-import { Segment, Header } from 'semantic-ui-react'
+import { Segment, Header, Grid } from 'semantic-ui-react'
 import CuppingTable from './CuppingTable'
 
+import './css/index.css'
 
 export default class MainContent extends Component {
 
@@ -26,10 +27,14 @@ export default class MainContent extends Component {
 
   render() {
     return (
-      <div>
-        { this.props.showCuppings ? this.cuppingsPage() : null }
-        { this.props.showNewCupping ? this.newCuppingPage() : null }
-      </div>
+      <Grid id="main-content">
+        <Grid.Row className="main-content-wrapper">
+          <Grid.Column width={14}>
+            { this.props.showCuppings ? this.cuppingsPage() : null }
+            { this.props.showNewCupping ? this.newCuppingPage() : null }
+          </Grid.Column>
+        </Grid.Row>
+      </Grid>
     );
   }
 
