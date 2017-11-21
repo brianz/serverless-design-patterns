@@ -5,27 +5,19 @@ from graphene_sqlalchemy import SQLAlchemyObjectType
 
 from .decorators import decode_json
 
+from ..models import SessionModel
 from ..persistence.cupping import Cupping
 from ..persistence.session import Session
-from ..persistence.queries import get_sessions, get_cuppings
+from ..persistence.queries import (
+        get_cuppings,
+        get_sessions,
+)
 
 
-from ..models import SessionModel
-from schematics.exceptions import DataError
-
-
-def create_session_from_json_payload(json_payload):
-    # TODO, handle errors a bit better, perhaps?
-    #cuppings = [CuppingModel(c) for c in json_payload.get('cuppings', ())]
-    #json_payload['cuppings'] = cuppings
-
-    # try:
-    session_model = SessionModel(json_payload)
+def create_session_from_kwargs(kwargs_dict):
+    session_model = SessionModel(kwargs_dict)
     session_model.validate()
     return Session.from_model(session_model)
-    # except DataError as e:
-    #     errors = prettify_schematics_errors(e)
-    #     raise InvalidInputData(errors)
 
 
 class CuppingObject(SQLAlchemyObjectType):
@@ -61,7 +53,7 @@ class CreateSessionMutation(graphene.Mutation):
     session = graphene.Field(SessionObject)
 
     def mutate(self, info, *args, **kwargs):
-        session = create_session_from_json_payload(kwargs)
+        session = create_session_from_kwargs(kwargs)
         return CreateSessionMutation(session=session, ok=True)
 
 
@@ -74,10 +66,6 @@ class Query(graphene.ObjectType):
     cuppings = graphene.List(CuppingObject, session_id=graphene.Int())
 
     def resolve_cuppings(self, info, **filters):
-        # the kwarg in the query fields ends up in the filters, or kwargs on the resolve function
-        # (Pdb) pp info.variable_values {'session_id': 2}
-        # (Pdb) pp filters {'sessionId': 2} if sessionId=graphene.Int()
-        # (Pdb) pp filters {'session_id': 2} if session_id=graphene.Int()
         return get_cuppings(**filters)
 
     def resolve_sessions(self, info, **filters):
