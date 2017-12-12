@@ -1,0 +1,22 @@
+service: fanout
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  region: ${env:AWS_REGION}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource: "arn:aws:lambda:${env:AWS_REGION}:*:function:fanout-${opt:stage}-Resize"
+
+
+functions:
+  ImageUpload:
+    handler: handler.imageUpload
+    events:
+      - s3:
+          bucket: brianz-image-resize-fanout
+          event: s3:ObjectCreated:*
+  Resize:
+    handler: handler.resize
