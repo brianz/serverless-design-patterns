@@ -2,21 +2,30 @@ service: fanout
 
 provider:
   name: aws
-  runtime: nodejs6.10
+  runtime: nodejs4.3
   region: ${env:AWS_REGION}
   iamRoleStatements:
     - Effect: Allow
       Action:
         - lambda:InvokeFunction
-      Resource: "arn:aws:lambda:${env:AWS_REGION}:*:function:fanout-${opt:stage}-Resize"
-
+      Resource: "arn:aws:lambda:${env:AWS_REGION}:*:function:fanout-${opt:stage}-ResizeImage"
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+      Resource:
+        - "arn:aws:s3:::brianz-image-resize-fanout-results"
+        - "arn:aws:s3:::brianz-image-resize-fanout-results/*"
 
 functions:
-  ImageUpload:
-    handler: handler.imageUpload
+  UploadImage:
+    handler: handler.uploadImage
     events:
       - s3:
           bucket: brianz-image-resize-fanout
           event: s3:ObjectCreated:*
-  Resize:
-    handler: handler.resize
+  ResizeImage:
+    handler: handler.resizeImage
+
+plugins:
+  - serverless-prune-plugin

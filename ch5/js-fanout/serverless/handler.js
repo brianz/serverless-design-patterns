@@ -1,81 +1,87 @@
 'use strict';
 
-var aws = require('aws-sdk');
-var lambda = new aws.Lambda({
-  region: 'us-west-2'
-});
+const aws = require('aws-sdk');
+const Jimp = require("jimp");
 
 
-module.exports.imageUpload = (event, context, callback) => {
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({
-      message: 'resized successfully'
-			, input: event
-    }),
-  };
-
+module.exports.uploadImage = (event, context, callback) => {
   var params = {
-    FunctionName: 'fanout-dev-Resize'
+    FunctionName: 'fanout-dev-ResizeImage'
     , InvocationType: "Event"
   }
 
   var sizes = [128, 256, 1024];
-  sizes = [512];
 
-  console.log(JSON.stringify(event))
+  const s3Objects = event['Records'].map(function(r) {
+    return r["s3"]
+  })
 
+  const lambda = new aws.Lambda({
+    region: 'us-west-2'
+  });
 
-/*
   for (var i=0; i<sizes.length; i++) {
-
-    params['Payload'] = JSON.stringify({"size": sizes[i]});
+    params['Payload'] = JSON.stringify({
+      "size": sizes[i]
+      , "s3Objects": s3Objects
+    });
 
     lambda.invoke(params, function(error, data) {
       if (error) {
-        console.log('error')
-        console.log(error)
+        callback(error)
       } else {
-        console.log('success')
-        console.log(data)
+        callback(null, 'success')
       }
     });
   }
-*/
 
-  callback(null, response);
 };
 
 
-module.exports.resize = (event, context, callback) => {
-  const response = {
-    body: JSON.stringify({
-      message: 'resizing image'
-    }),
-  };
+module.exports.resizeImage = (event, context, callback) => {
 
+  const size = event.size;
+  const S3 = new aws.S3();
 
-  S3.getObject({Bucket: BUCKET, Key: originalKey}).promise()
-    .then(data => Sharp(data.Body)
-      .resize(width, height)
-      .toFormat('png')
-      .toBuffer()
-    )
-    .then(buffer => S3.putObject({
+  event.s3Objects.map(function(s3Object) {
+    var bucket = s3Object.bucket.name;
+    var key = s3Object.object.key;
+    var parts = key.split('.');
+    var name = parts[0];
+    var suffix = parts[1];
+
+    function uploadToS3(err, buffer) {
+      var params = {
         Body: buffer,
-        Bucket: BUCKET,
-        ContentType: 'image/png',
-        Key: key,
-      }).promise()
-    )
-    .then(() => callback(null, {
-        statusCode: '301',
-        headers: {'location': `${URL}/${key}`},
-        body: '',
-      })
-    )
-    .catch(err => callback(err))
+        Bucket: bucket + '-results',
+        Key: name + "-" + size + "." + suffix
+      }
 
-  console.log('Received event:', JSON.stringify(event, null, 2));
-  console.log(response)
+      S3.putObject(params, function(err, data) {
+        if ( err ) {
+          callback(err);
+        } else {
+          console.log(data)
+          callback(null, "success");
+        }
+      })
+    }
+
+    S3.getObject({Bucket: bucket, Key: key}, function(err, data) {
+      if ( err ) {
+        console.log('Error reading S3 item: ' + bucket + ' ' + key);
+      } else {
+        Jimp.read(data.Body, function(err, buffer) {
+          buffer
+            .resize(size, Jimp.AUTO)
+            .getBuffer( Jimp.MIME_JPEG, uploadToS3 )
+        })
+      }
+    });
+
+    console.log('got here');
+    callback(null, "success");
+
+  });
+
 };
