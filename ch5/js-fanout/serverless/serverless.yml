@@ -11,10 +11,8 @@ provider:
       Resource: "arn:aws:lambda:${env:AWS_REGION}:*:function:fanout-${opt:stage}-ResizeImage"
     - Effect: Allow
       Action:
-        - s3:GetObject
         - s3:PutObject
       Resource:
-        - "arn:aws:s3:::brianz-image-resize-fanout-results"
         - "arn:aws:s3:::brianz-image-resize-fanout-results/*"
 
 functions:
