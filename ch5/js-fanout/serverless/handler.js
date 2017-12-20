@@ -51,17 +51,18 @@ module.exports.resizeImage = (event, context, callback) => {
     var suffix = parts[1];
 
     function uploadToS3(err, buffer) {
+      const keyName = name + "-" + size + "." + suffix
       var params = {
         Body: buffer,
         Bucket: bucket + '-results',
-        Key: name + "-" + size + "." + suffix
+        Key: keyName
       }
 
       S3.putObject(params, function(err, data) {
         if ( err ) {
           callback(err);
         } else {
-          console.log(data)
+          console.log('successfully uploaded resized image: ' + keyName)
           callback(null, "success");
         }
       })
@@ -79,7 +80,6 @@ module.exports.resizeImage = (event, context, callback) => {
       }
     });
 
-    console.log('got here');
     callback(null, "success");
 
   });
