@@ -1,0 +1,52 @@
+service: twitter-stream
+
+provider:
+  name: aws
+  runtime: python2.7
+  memorySize: 128
+  timeout: 58
+  region: ${env:AWS_REGION}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sqs:*
+      Resource: "arn:aws:sqs:${env:AWS_REGION}:*:${env:ENV}TwitterFirehoseQueue"
+    - Effect: Allow
+      Action:
+        - rekognition:DetectLabels
+      Resource: "*"
+  environment:
+    TWITTER_ACCESS_SECRET: ${env:TWITTER_ACCESS_SECRET}
+    TWITTER_ACCESS_TOKEN: ${env:TWITTER_ACCESS_TOKEN}
+    TWITTER_CONSUMER_KEY: ${env:TWITTER_CONSUMER_KEY}
+    TWITTER_CONSUMER_SECRET: ${env:TWITTER_CONSUMER_SECRET}
+    TWITTER_STREAM_QUEUE_NAME: ${env:ENV}TwitterFirehoseQueue
+
+
+package:
+  exclude:
+    - .git/**
+    - __pycache__/**
+    - "**/__pycache__/**"
+    - "*.pyc"
+    - "*.swp"
+
+
+resources:
+  Resources:
+    crawlerSQS:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${env:ENV}TwitterFirehoseQueue
+        VisibilityTimeout: 30
+
+
+functions:
+  firehose:
+    handler: handler.firehose
+    events:
+      - schedule: rate(1 minute)
+  classify:
+    handler: handler.classify
+    events:
+      - schedule: rate(2 minutes)
