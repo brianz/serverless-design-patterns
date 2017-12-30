@@ -13,6 +13,10 @@ auth.set_access_token(access_token, access_token_secret)
 
 api = tweepy.API(auth)
 
+
+tags = ['#dog', '#dogs', '#puppy', '#cat', '#kitty', '#lolcat', '#badkitty']
+
+
 class MyStreamListener(tweepy.StreamListener):
 
     def _get_media_url(self, media):
@@ -35,13 +39,18 @@ class MyStreamListener(tweepy.StreamListener):
 
         print
         print tweet.text
+
+        hashtags = [h['text'] for h in container.get('entities', {}).get('hashtags', ())]
+        for t in hashtags:
+            t = '#' + t
+            if t in self.tags:
+                print t
+
         for url in all_urls:
             print url
-
+        #pp(container)
 
 myStreamListener = MyStreamListener()
-myStream = tweepy.Stream(auth = api.auth, listener=myStreamListener)
-try:
-    myStream.filter(track=['#dog', '#dogs', '#puppy', '#cat', '#kitty', '#lolcat', '#badkitty'])
-except:
-    pass
+myStreamListener.tags = tags
+myStream = tweepy.Stream(auth=api.auth, listener=myStreamListener)
+myStream.filter(track=tags)

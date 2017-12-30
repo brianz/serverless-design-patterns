@@ -3,8 +3,12 @@ import json
 import os
 import urllib2
 
+from decimal import Decimal
+
 
 TWITTER_STREAM_QUEUE_NAME = os.environ['TWITTER_STREAM_QUEUE_NAME']
+
+from .storage import ClassiferResults
 
 _sqs_client = None
 _s3_client = None
@@ -57,11 +61,30 @@ def classify_photos():
             receipt = msg['ReceiptHandle']
             body = json.loads(msg['Body'])
 
-            text = body['text']
             url = body['url']
 
+            # first check if we already have this image
+            classifier_store = ClassiferResults(url=url)
+            if classifier_store.exists:
+                sqs.delete_message(QueueUrl=sqs_url, ReceiptHandle=receipt)
+
+            print url
             image_response = urllib2.urlopen(url)
+
             results = rekognition.detect_labels(Image={'Bytes': image_response.read()})
-            print url, results['Labels']
+            print results['Labels']
+
+            scores = [{
+                'Confidence': Decimal(l['Confidence']),
+                'Name': l['Name'],
+            } for l in results['Labels']]
+
+            classifier_store.update(
+                    url=url,
+                    text=body['text'],
+                    hashtags=body['hashtags'],
+                    scores=scores,
+                    labels=[l['Name'] for l in results['Labels']],
+            )
 
             sqs.delete_message(QueueUrl=sqs_url, ReceiptHandle=receipt)
