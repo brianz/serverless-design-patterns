@@ -4,6 +4,9 @@ Repository for Serverless Design Patterns and Best Practices book
 
 To be published by Packt Publishing spring 2018
 
+[https://www.packtpub.com/application-development/serverless-design-patterns-and-best-practices](https://www.packtpub.com/application-development/serverless-design-patterns-and-best-practices)
+
+
 # Serverless Cookiecutter template
 
 These projects were bootstrapped using the Very Serverless Cookiecutter template. This is a

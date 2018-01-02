@@ -1,16 +1,13 @@
 import os
-
 import tweepy
+
+from .queue import publish_tweet
 
 consumer_key = os.environ['TWITTER_CONSUMER_KEY']
 consumer_secret = os.environ['TWITTER_CONSUMER_SECRET']
 
 access_token = os.environ['TWITTER_ACCESS_TOKEN']
 access_token_secret = os.environ['TWITTER_ACCESS_SECRET']
-
-
-from .queue import publish_tweet
-
 
 
 class PhotoStreamListener(tweepy.StreamListener):

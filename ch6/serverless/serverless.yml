@@ -4,7 +4,6 @@ provider:
   name: aws
   runtime: python2.7
   memorySize: 128
-  timeout: 58
   region: ${env:AWS_REGION}
   iamRoleStatements:
     - Effect: Allow
@@ -37,12 +36,12 @@ package:
 
 resources:
   Resources:
-    crawlerSQS:
+    FirehoseSQS:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: ${env:ENV}TwitterFirehoseQueue
         VisibilityTimeout: 30
-    dynamoResultsTable:
+    DynamoResultsTable:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${env:DYNAMODB_RESULTS_TABLE_NAME}
@@ -57,11 +56,13 @@ resources:
           WriteCapacityUnits: ${env:DYNAMODB_TABLE_WRITE_IOPS}
 
 functions:
-  firehose:
+  Firehose:
     handler: handler.firehose
+    timeout: 58
     events:
-      - schedule: rate(1 hour)
-  classify:
+      - schedule: rate(1 minute)
+  Classify:
     handler: handler.classify
+    timeout: 58
     events:
-      - schedule: rate(2 minutes)
+      - schedule: rate(1 minute)

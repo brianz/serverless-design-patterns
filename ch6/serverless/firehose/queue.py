@@ -46,16 +46,14 @@ def classify_photos():
     sqs = get_sqs_client()
     sqs_url = get_queue_url()
 
-    should_continue = True
-
-    while should_continue:
+    while True:
         response = sqs.receive_message(
             QueueUrl=sqs_url,
             MaxNumberOfMessages=10,
         )
-        messages = response.get('Messages', [])
+        messages = response.get('Messages')
         if not messages:
-            should_continue = False
+            break
 
         for msg in messages:
             receipt = msg['ReceiptHandle']
@@ -66,21 +64,22 @@ def classify_photos():
             # first check if we already have this image
             classifier_store = ClassiferResults(url=url)
             if classifier_store.exists:
+                print 'Deleting queue item due to duplicate image'
                 sqs.delete_message(QueueUrl=sqs_url, ReceiptHandle=receipt)
+                continue
 
-            print url
+            print 'Opening url', url
             image_response = urllib2.urlopen(url)
 
+            print 'Performing rekognition labeling'
             results = rekognition.detect_labels(Image={'Bytes': image_response.read()})
-            print results['Labels']
 
             scores = [{
                 'Confidence': Decimal(l['Confidence']),
                 'Name': l['Name'],
             } for l in results['Labels']]
 
-            classifier_store.update(
-                    url=url,
+            classifier_store.upsert(
                     text=body['text'],
                     hashtags=body['hashtags'],
                     scores=scores,

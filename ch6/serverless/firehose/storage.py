@@ -6,35 +6,19 @@ TABLE_NAME = os.environ['DYNAMODB_RESULTS_TABLE_NAME']
 AWS_REGION = os.environ['AWS_REGION']
 
 
-class DynamoDB(dict):
 
-    def __init__(self, *args, **kwargs):
-        super(DynamoDB, self).__init__(*args, **kwargs)
-        self._db = None
-        self._table = None
+class ClassiferResults(dict):
 
-    def connect(self, **kwargs):
-        if not self._db:
-            self._db = boto3.resource('dynamodb', region_name=AWS_REGION)
-            self._table = self._db.Table(TABLE_NAME)
+    def __init__(self, url, *args, **kwargs):
+        super(ClassiferResults, self).__init__(*args, **kwargs)
+        self.__db = boto3.resource('dynamodb', region_name=AWS_REGION)
+        self.__table = self.__db.Table(TABLE_NAME)
 
-            #print("Looking up: %s" % (kwargs, ))
-            data = self._table.get_item(Key=kwargs)
-            record = data.get('Item', {})
-            #print("Got record: %s" % (record, ))
-            self.update(record)
-
-    def save(self):
-        item = {k: v for k, v in self.iteritems()}
-        return self._table.put_item(Item=item)
-
-
-class ClassiferResults(object):
-
-    def __init__(self, url):
         self.__url = url
-        self.__db = DynamoDB()
-        self.__db.connect(url=url)
+
+        data = self.__table.get_item(Key={'url': url})
+        record = data.get('Item', {})
+        self.update(record)
 
     @property
     def exists(self):
@@ -42,8 +26,13 @@ class ClassiferResults(object):
 
     @property
     def is_empty(self):
-        return self.__db == {}
+        return self == {}
 
-    def update(self, **kwargs):
-        self.__db.update(kwargs)
-        self.__db.save()
+    def save(self):
+        item = {k: v for k, v in self.iteritems()}
+        return self.__table.put_item(Item=item)
+
+    def upsert(self, **kwargs):
+        kwargs['url'] = self.__url
+        self.update(kwargs)
+        self.save()
