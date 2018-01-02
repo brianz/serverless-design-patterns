@@ -87,17 +87,6 @@ resources:
 
 
 functions:
-  GraphQL:
-    handler: handler.graphql
-    events:
-      - http:
-          path: graphql
-          method: get
-          cors: true
-      - http:
-          path: graphql
-          method: post
-          cors: true
   HandleSession:
     handler: handler.session
     events:
