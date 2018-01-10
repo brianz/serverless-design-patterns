@@ -1,0 +1,48 @@
+service: map-reduce
+
+provider:
+  name: aws
+  runtime: python3.6
+  memorySize: 1024
+  timeout: 300
+  region: ${env:AWS_REGION}
+  # environment:
+  #   DYNAMODB_RESULTS_TABLE_NAME: ${env:DYNAMODB_RESULTS_TABLE_NAME}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:*"
+      Resource: "arn:aws:s3:::big-data-benchmark/*"
+
+package:
+  exclude:
+    - .git/**
+    - __pycache__/**
+    - "**/__pycache__/**"
+    - "*.pyc"
+    - "*.swp"
+
+# resources:
+#   Resources:
+#     FirehoseSQS:
+#       Type: AWS::SQS::Queue
+#       Properties:
+#         QueueName: ${env:ENV}TwitterFirehoseQueue
+#         VisibilityTimeout: 30
+#     DynamoResultsTable:
+#       Type: AWS::DynamoDB::Table
+#       Properties:
+#         TableName: ${env:DYNAMODB_RESULTS_TABLE_NAME}
+#         AttributeDefinitions:
+#           - AttributeName: url
+#             AttributeType: S
+#         KeySchema:
+#           - AttributeName: url
+#             KeyType: HASH
+#         ProvisionedThroughput:
+#           ReadCapacityUnits: ${env:DYNAMODB_TABLE_READ_IOPS}
+#           WriteCapacityUnits: ${env:DYNAMODB_TABLE_WRITE_IOPS}
+
+functions:
+  Mapper:
+    handler: handler.mapper
