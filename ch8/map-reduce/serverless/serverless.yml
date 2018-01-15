@@ -6,13 +6,29 @@ provider:
   memorySize: 1024
   timeout: 300
   region: ${env:AWS_REGION}
-  # environment:
-  #   DYNAMODB_RESULTS_TABLE_NAME: ${env:DYNAMODB_RESULTS_TABLE_NAME}
+  environment:
+    MAPREDUCE_SQS_ARN:
+      Ref: SNSMapperTopic
+    REDUCE_RESULTS_BUCKET: "brianz-${env:ENV}-mapreduce-results"
   iamRoleStatements:
     - Effect: "Allow"
       Action:
         - "s3:*"
-      Resource: "arn:aws:s3:::big-data-benchmark/*"
+      Resource:
+        - "arn:aws:s3:::big-data-benchmark"
+        - "arn:aws:s3:::big-data-benchmark/*"
+        - "arn:aws:s3:::brianz-${env:ENV}-mapreduce-results"
+        - "arn:aws:s3:::brianz-${env:ENV}-mapreduce-results/*"
+    - Effect: "Allow"
+      Action:
+        - "sns:*"
+      Resource:
+        Ref: SNSMapperTopic
+        #"arn:aws:sns:${self:provider.region}:*:${env:ENV}PyChainMiners"
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource: "arn:aws:lambda:${env:AWS_REGION}:*:function:map-reduce-${opt:stage}-Reducer"
 
 package:
   exclude:
@@ -22,27 +38,38 @@ package:
     - "*.pyc"
     - "*.swp"
 
-# resources:
-#   Resources:
-#     FirehoseSQS:
-#       Type: AWS::SQS::Queue
-#       Properties:
-#         QueueName: ${env:ENV}TwitterFirehoseQueue
-#         VisibilityTimeout: 30
-#     DynamoResultsTable:
-#       Type: AWS::DynamoDB::Table
-#       Properties:
-#         TableName: ${env:DYNAMODB_RESULTS_TABLE_NAME}
-#         AttributeDefinitions:
-#           - AttributeName: url
-#             AttributeType: S
-#         KeySchema:
-#           - AttributeName: url
-#             KeyType: HASH
-#         ProvisionedThroughput:
-#           ReadCapacityUnits: ${env:DYNAMODB_TABLE_READ_IOPS}
-#           WriteCapacityUnits: ${env:DYNAMODB_TABLE_WRITE_IOPS}
+resources:
+  Resources:
+    SNSMapperTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: ${env:ENV} notification for mappers
+        TopicName: ${env:ENV}MapReduceMapper
 
 functions:
+  Driver:
+    handler: handler.driver
   Mapper:
     handler: handler.mapper
+    events:
+      - sns:
+          topicName: ${env:ENV}PyChainMiners
+          arn:
+            Ref: SNSMapperTopic
+  Reducer:
+    handler: handler.reducer
+  FinalReducer:
+    handler: handler.final_reducer
+    events:
+      - s3:
+          bucket: brianz-${env:ENV}-mapreduce-results
+          event: s3:ObjectCreated:*
+
+
+plugins:
+  - serverless-prune-plugin
+
+custom:
+  prune:
+    automatic: true
+    number: 2
