@@ -7,7 +7,7 @@ provider:
   timeout: 300
   region: ${env:AWS_REGION}
   environment:
-    MAPREDUCE_SQS_ARN:
+    MAPREDUCE_SNS_ARN:
       Ref: SNSMapperTopic
     REDUCE_RESULTS_BUCKET: "brianz-${env:ENV}-mapreduce-results"
   iamRoleStatements:
@@ -28,7 +28,10 @@ provider:
     - Effect: Allow
       Action:
         - lambda:InvokeFunction
-      Resource: "arn:aws:lambda:${env:AWS_REGION}:*:function:map-reduce-${opt:stage}-Reducer"
+      Resource:
+        - "arn:aws:lambda:${env:AWS_REGION}:*:function:map-reduce-${opt:stage}-Reducer"
+        - "arn:aws:lambda:${env:AWS_REGION}:*:function:map-reduce-${opt:stage}-BatchReducer"
+        - "arn:aws:lambda:${env:AWS_REGION}:*:function:map-reduce-${opt:stage}-FinalReducer"
 
 package:
   exclude:
@@ -53,17 +56,27 @@ functions:
     handler: handler.mapper
     events:
       - sns:
-          topicName: ${env:ENV}PyChainMiners
+          topicName: ${env:ENV}MapReduceMapper
           arn:
             Ref: SNSMapperTopic
   Reducer:
     handler: handler.reducer
+  BatchReducer:
+    handler: handler.batch_reducer
+    events:
+      - s3:
+          bucket: brianz-${env:ENV}-mapreduce-results
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: '-batch-done.json'
   FinalReducer:
     handler: handler.final_reducer
     events:
       - s3:
           bucket: brianz-${env:ENV}-mapreduce-results
           event: s3:ObjectCreated:*
+          rules:
+            - suffix: '-final-done.json'
 
 
 plugins:

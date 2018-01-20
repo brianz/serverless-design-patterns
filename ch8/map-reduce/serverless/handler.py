@@ -29,6 +29,9 @@ def reducer(event, context):
     mapreduce.reducer.reduce(event)
 
 
+def batch_reducer(event, context):
+    mapreduce.reducer.batch_reducer(event)
+
+
 def final_reducer(event, context):
-    print(event)
-    #mapreduce.reducer.final_reduce(event)
+    mapreduce.reducer.final_reducer(event)

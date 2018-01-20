@@ -1,10 +1,11 @@
 import boto3
+import botocore
 import csv
 import io
 import json
 import tempfile
 
-from .constants import SQS_MAPPER_ARN
+from .constants import SNS_MAPPER_ARN
 
 _clients = {}
 
@@ -20,12 +21,12 @@ def _get_client(service):
 
 
 
-def invoke_lambda(payload):
+def invoke_lambda(name, payload, invocation_type='Event'):
     client = _get_client('lambda')
     payload = bytes(json.dumps(payload), 'utf-8')
     response = client.invoke(
-        FunctionName='map-reduce-dev-Reducer',
-        InvocationType='Event',
+        FunctionName=name,
+        InvocationType=invocation_type,
         Payload=payload,
     )
 
@@ -33,16 +34,10 @@ def invoke_lambda(payload):
 def publish_to_sns(payload):
     client = _get_client('sns')
     client.publish(
-            TargetArn=SQS_MAPPER_ARN,
+            TargetArn=SNS_MAPPER_ARN,
             Message=json.dumps({'default': json.dumps(payload)}),
             MessageStructure='json',
     )
-
-
-def read_file_from_s3(bucket_name, key):
-    client = _get_client('s3')
-    obj = client.get_object(Bucket=bucket_name, Key=key)
-    return obj['Body']
 
 
 def download_from_s3(bucket_name, key, s3=None):
@@ -57,6 +52,27 @@ def download_from_s3(bucket_name, key, s3=None):
     return tmp.name
 
 
+def s3_file_exists(bucket_name, key):
+    s3 = boto3.resource('s3')
+
+    try:
+        s3.Object(bucket_name, key).load()
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "404":
+            return False
+        else:
+            print(e.response)
+            return False
+
+    return True
+
+
+def read_from_s3(bucket_name, key):
+    client = _get_client('s3')
+    obj = client.get_object(Bucket=bucket_name, Key=key)
+    return obj['Body'].read()
+
+
 def write_to_s3(bucket, key, payload):
     json_payload = json.dumps(payload, indent=2)
     body = bytes(json_payload, 'utf-8')
@@ -69,7 +85,7 @@ def write_to_s3(bucket, key, payload):
     )
 
 
-def list_s3_bucket(name, prefix=None):
+def list_s3_bucket(name, prefix=None, suffix=None):
     s3 = boto3.resource('s3')
     bucket = s3.Bucket(name=name)
     results = bucket.objects.filter(Prefix=prefix)

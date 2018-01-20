@@ -1,3 +1,3 @@
 import os
 
-SQS_MAPPER_ARN = os.environ['MAPREDUCE_SQS_ARN']
+SNS_MAPPER_ARN = os.environ['MAPREDUCE_SNS_ARN']
