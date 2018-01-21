@@ -140,8 +140,7 @@ def final_reducer(event):
 
             time.sleep(2)
 
-        print(data)
-
+        print('Read final data, reducing')
         if not final_data:
             final_data = data
         else:

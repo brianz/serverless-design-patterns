@@ -1,6 +1,7 @@
 import json
 import csv
 import os
+import time
 import uuid
 
 from .aws import (
@@ -73,6 +74,7 @@ def crawl(bucket_name, prefix='pavlo/text/tiny/uservisits/part-'):
     will each work on a particular file.
 
     """
+    print('Starting at: %s: %s' % (time.time(), time.asctime(), ))
     # Unique identifer for the entire map-reduce run
     run_id = str(uuid.uuid4())
     mapper_data = [
