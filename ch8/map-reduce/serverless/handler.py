@@ -16,7 +16,7 @@ def driver(event, context):
     bucket_name = 'big-data-benchmark'
 
     if prefix == 'large':
-        mapreduce.mapper.crawl(bucket_name, prefix='pavlo/text/1node/uservisits/part-')
+        mapreduce.mapper.crawl(bucket_name, prefix='pavlo/text/1node/uservisits/part-0000')
     else:
         mapreduce.mapper.crawl(bucket_name, prefix='pavlo/text/tiny/uservisits/part-')
 

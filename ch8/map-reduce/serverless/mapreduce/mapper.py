@@ -117,7 +117,7 @@ def map(event):
 
         # Send off a mapper job every 10,000 lines
         line_number += 1
-        if line_number >= 10000:
+        if line_number >= 100000:
             payload = {
                     'batch': batch,
                     'job_id': job_id,

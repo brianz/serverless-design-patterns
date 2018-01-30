@@ -3,6 +3,7 @@ import time
 import uuid
 
 from .aws import (
+        download_from_s3,
         list_s3_bucket,
         read_from_s3,
         s3_file_exists,
@@ -110,6 +111,10 @@ def final_reducer(event):
         )
         return
 
+    import gc
+    job_metadata = {}
+    gc.collect()
+
     # Let's put a lock file here so we can claim that we're finishing up the final reduce step
     final_results_key = 'run-%s/FinalResults.json' % (run_id, )
     if s3_file_exists(bucket, final_results_key):
@@ -122,6 +127,9 @@ def final_reducer(event):
     data = {}
 
     print('listing', bucket, prefix)
+
+    temp_file_names = []
+
     for (bucket, key) in list_s3_bucket(bucket, prefix):
         print('reading', key)
         if not key.endswith('-final-done.json'):
@@ -129,18 +137,27 @@ def final_reducer(event):
 
         # it can take a while for the data to be read consistently from S3, so in the case that
         # there is no data wait a bit.
-        for i in range(10):
-            print('%d) Reading %s/%s' % (i, bucket, key))
-            try:
-                payload = json.loads(read_from_s3(bucket, key))
-                data = payload['data']
-                break
-            except Exception as e:
-                print(e)
+        # for i in range(10):
+        #     print('%d) Reading %s/%s' % (i, bucket, key))
+        #     try:
+        #         payload = json.loads(read_from_s3(bucket, key))
+        #         data = payload['data']
+        #         break
+        #     except Exception as e:
+        #         print(e)
+        #
+        #     time.sleep(2)
 
-            time.sleep(2)
+        tmp_file = download_from_s3(bucket, key)
+        #temp_file_names.append(tmp_file)
+
+        gc.collect()
+
+        with open(tmp_file, 'r') as fh:
+            data = json.load(fh)['data']
 
         print('Read final data, reducing')
+
         if not final_data:
             final_data = data
         else:
