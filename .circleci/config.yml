@@ -1,0 +1,8 @@
+version: 2
+jobs:
+   build:
+     docker:
+       - image: verypossible/serverless:1.20.0-python3
+     steps:
+       - checkout
+       - run: echo "hello world"
