@@ -19,6 +19,10 @@ os.environ.update({
     'CUPPING_DB_HOST': 'cupping-%s-postgres' % ENV,
 })
 
+if os.environ.get('CIRCLECI'):
+    os.environ['CUPPING_DB_HOST'] = 'localhost'
+
+
 from cupping.models import (
         CuppingModel,
         SessionModel,

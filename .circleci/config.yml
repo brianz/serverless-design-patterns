@@ -1,8 +1,66 @@
 version: 2
 jobs:
-   build:
-     docker:
-       - image: verypossible/serverless:1.20.0-python3
-     steps:
-       - checkout
-       - run: echo "hello world"
+  build:
+    docker:
+      - image: verypossible/serverless:1.25.0-python3
+      - image: postgres
+    environment:
+      - ENV: circleci
+    steps:
+      - checkout
+      - run:
+          name: Setup envs
+          working_directory: ch2
+          command: |
+            mkdir envs
+            echo "CUPPING_DB_USERNAME=postgres" > envs/circleci
+            echo "CUPPING_DB_PASSWORD=" >> envs/circleci
+            echo "CUPPING_DB_NAME=cupping_test" >> envs/circleci
+      - restore_cache:
+          key: dependency-cache-{{ checksum "ch2/requirements.txt" }}
+      - run:
+          name: Install python requirements
+          working_directory: ch2
+          command: make libs
+      - save_cache:
+          key: dependency-cache-{{ checksum "ch2/requirements.txt" }}
+          paths:
+            - ch2/lib
+      - run:
+          name: py.test
+          working_directory: ch2
+          command: make tests
+      - store_artifacts:
+          path: ch2/htmlcov/
+          destination: coverage
+
+  deploy:
+    docker:
+      - image: verypossible/serverless:1.25.0-python3
+    environment:
+      - ENV: production
+      - AWS_REGION: us-west-2
+      - VPC_ID: vpc-b7d759d1
+      - SUBNET_ID_A: subnet-4a254c11
+      - SUBNET_ID_B: subnet-76b16810
+      - SUBNET_ID_C: subnet-bda25ff5
+      - CUPPING_DB_USERNAME: root
+      - CUPPING_DB_NAME: cupping_log
+    steps:
+      - run:
+          name: Deploy if tests pass and branch is Master
+          working_directory: ch2
+          command: make deploy
+
+
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
