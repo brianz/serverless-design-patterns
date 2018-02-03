@@ -1,5 +1,6 @@
 version: 2
 jobs:
+
   build:
     docker:
       - image: verypossible/serverless:1.25.0-python3
@@ -37,6 +38,7 @@ jobs:
   deploy:
     docker:
       - image: verypossible/serverless:1.25.0-python3
+    working_directory: ch2
     environment:
       - ENV: production
       - AWS_REGION: us-west-2
@@ -47,9 +49,12 @@ jobs:
       - CUPPING_DB_USERNAME: root
       - CUPPING_DB_NAME: cupping_log
     steps:
+      - checkout
       - run:
-          name: Deploy if tests pass and branch is Master
-          working_directory: ch2
+          name: Build libs
+          command: make libs
+      - run:
+          name: Production deploy if tests pass and branch is Master
           command: make deploy
 
 
