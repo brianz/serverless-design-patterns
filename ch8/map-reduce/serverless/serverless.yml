@@ -24,13 +24,11 @@ provider:
         - "sns:*"
       Resource:
         Ref: SNSMapperTopic
-        #"arn:aws:sns:${self:provider.region}:*:${env:ENV}PyChainMiners"
     - Effect: Allow
       Action:
         - lambda:InvokeFunction
       Resource:
         - "arn:aws:lambda:${env:AWS_REGION}:*:function:map-reduce-${opt:stage}-Reducer"
-        - "arn:aws:lambda:${env:AWS_REGION}:*:function:map-reduce-${opt:stage}-BatchReducer"
         - "arn:aws:lambda:${env:AWS_REGION}:*:function:map-reduce-${opt:stage}-FinalReducer"
 
 package:
@@ -61,22 +59,21 @@ functions:
             Ref: SNSMapperTopic
   Reducer:
     handler: handler.reducer
-  BatchReducer:
-    handler: handler.batch_reducer
     events:
       - s3:
           bucket: brianz-${env:ENV}-mapreduce-results
           event: s3:ObjectCreated:*
           rules:
-            - suffix: '-batch-done.json'
+            - suffix: '-final-done.csv'
   FinalReducer:
     handler: handler.final_reducer
-    events:
-      - s3:
-          bucket: brianz-${env:ENV}-mapreduce-results
-          event: s3:ObjectCreated:*
-          rules:
-            - suffix: '-final-done.json'
+    memorySize: 3008
+    # events:
+    #   - s3:
+    #       bucket: brianz-${env:ENV}-mapreduce-results
+    #       event: s3:ObjectCreated:*
+    #       rules:
+    #         - suffix: 'FinalResults.json'
 
 
 plugins:

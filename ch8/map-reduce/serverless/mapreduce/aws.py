@@ -40,7 +40,11 @@ def publish_to_sns(payload):
     )
 
 
-def download_from_s3(bucket_name, key, s3=None):
+import glob
+def download_from_s3(bucket, key, s3=None):
+    for fn in glob.glob('/tmp/aws-*'):
+        os.remove(fn)
+
     s3 = s3 or boto3.resource('s3')
     tmp = tempfile.NamedTemporaryFile(
             mode='w+t',
@@ -48,15 +52,15 @@ def download_from_s3(bucket_name, key, s3=None):
             dir='/tmp',
             delete=False)
     tmp.close()
-    s3.Bucket(bucket_name).download_file(key, tmp.name)
+    s3.Bucket(bucket).download_file(key, tmp.name)
     return tmp.name
 
 
-def s3_file_exists(bucket_name, key):
+def s3_file_exists(bucket, key):
     s3 = boto3.resource('s3')
 
     try:
-        s3.Object(bucket_name, key).load()
+        s3.Object(bucket, key).load()
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] == "404":
             return False
@@ -67,22 +71,45 @@ def s3_file_exists(bucket_name, key):
     return True
 
 
-def read_from_s3(bucket_name, key):
+def read_from_s3(bucket, key):
     client = _get_client('s3')
-    obj = client.get_object(Bucket=bucket_name, Key=key)
+    return client.get_object(Bucket=bucket, Key=key)
+
+
+def read_body_from_s3(bucket, key):
+    obj = read_from_s3(bucket, key)
     return obj['Body'].read()
 
 
-def write_to_s3(bucket, key, payload):
-    json_payload = json.dumps(payload, indent=2)
-    body = bytes(json_payload, 'utf-8')
+def delete_s3_object(bucket, key):
+    client = _get_client('s3')
+    return client.delete_object(Bucket=bucket, Key=key)
 
-    client = boto3.client('s3')
-    response = client.put_object(
-            Body=body,
-            Bucket=bucket,
-            Key=key,
-    )
+
+def write_to_s3(bucket, key, payload, **kwargs):
+    tmp = tempfile.NamedTemporaryFile(mode='w+t', prefix='aws-', dir='/tmp')
+    json.dump(payload, tmp)
+    tmp.flush()
+    filename = tmp.name
+
+    s3 = boto3.resource('s3')
+    s3.meta.client.upload_file(filename, bucket, key, ExtraArgs=kwargs)
+
+    tmp.close()
+
+
+def write_csv_to_s3(bucket, key, payload, **kwargs):
+    tmp = tempfile.NamedTemporaryFile(mode='w+t', prefix='aws-', dir='/tmp')
+    w = csv.writer(tmp)
+    w.writerows(payload.items())
+    tmp.flush()
+
+    filename = tmp.name
+
+    s3 = boto3.resource('s3')
+    s3.meta.client.upload_file(filename, bucket, key, ExtraArgs=kwargs)
+
+    tmp.close()
 
 
 def list_s3_bucket(name, prefix=None, suffix=None):

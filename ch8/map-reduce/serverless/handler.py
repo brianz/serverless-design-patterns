@@ -16,6 +16,8 @@ def driver(event, context):
     bucket_name = 'big-data-benchmark'
 
     if prefix == 'large':
+        mapreduce.mapper.crawl(bucket_name, prefix='pavlo/text/1node/uservisits/part-000')
+    elif prefix == 'med':
         mapreduce.mapper.crawl(bucket_name, prefix='pavlo/text/1node/uservisits/part-0000')
     else:
         mapreduce.mapper.crawl(bucket_name, prefix='pavlo/text/tiny/uservisits/part-')
@@ -27,10 +29,6 @@ def mapper(event, context):
 
 def reducer(event, context):
     mapreduce.reducer.reduce(event)
-
-
-def batch_reducer(event, context):
-    mapreduce.reducer.batch_reducer(event)
 
 
 def final_reducer(event, context):

@@ -2,7 +2,6 @@
   "name": "map-reduce",
   "description": "",
   "version": "0.1.0",
-  "dependencies": {},
   "devDependencies": {
     "serverless-prune-plugin": "^1.3.0"
   }

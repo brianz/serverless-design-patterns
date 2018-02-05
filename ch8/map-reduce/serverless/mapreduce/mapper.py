@@ -4,12 +4,15 @@ import os
 import time
 import uuid
 
+from ipaddress import IPv4Address
+
 from .aws import (
         download_from_s3,
         invoke_lambda,
         list_s3_bucket,
         publish_to_sns,
         write_to_s3,
+        write_csv_to_s3,
 )
 
 from pprint import pprint as pp
@@ -47,23 +50,6 @@ def _csv_lines_from_filepath(filepath, delete=True):
         os.remove(filepath)
 
 
-def _invoke_reducer(payload):
-    #invoke_lambda('map-reduce-dev-Reducer', payload)
-    bucket = 'brianz-dev-mapreduce-results'
-
-    job_id = payload['job_id']
-    run_id = payload['run_id']
-    batch = payload['batch']
-    data = payload['data']
-
-    if not data:
-        print('Error, empty data')
-        return
-
-    key = 'run-%s/job-%s-payload-%s.json' % (run_id, job_id, batch)
-    write_to_s3(bucket, key, payload)
-
-
 def crawl(bucket_name, prefix='pavlo/text/tiny/uservisits/part-'):
     """Entrypoint for a map-reduce job.
 
@@ -86,13 +72,12 @@ def crawl(bucket_name, prefix='pavlo/text/tiny/uservisits/part-'):
             } for (bucket, key) in list_s3_bucket(bucket_name, prefix)
     ]
 
-    # Let's add in the total number of jobs which will be kicked off. Note that the mappers
-    # themselves will break up their work into chunks so as not to send too much data to each
-    # reducer.
+    # Let's add in the total number of jobs which will be kicked off.
     num_mappers = len(mapper_data)
 
-    for mapper_dict in mapper_data:
+    for i, mapper_dict in enumerate(mapper_data):
         mapper_dict['total_jobs'] = num_mappers
+        mapper_dict['job_id'] = i
         publish_to_sns(mapper_dict)
 
 
@@ -107,56 +92,23 @@ def map(event):
 
     ad_revenue_by_ip = {}
     line_number = 0
-    batch = 0
     bucket = 'brianz-dev-mapreduce-results'
 
     for line in _csv_lines_from_filepath(tmp_file):
-        ip = line['ip']
-        ad_revenue_by_ip.setdefault(ip, 0)
-        ad_revenue_by_ip[ip] += float(line[AD_REVENUE])
+        ip = int(IPv4Address(line['ip']))
+        if ip in ad_revenue_by_ip:
+            ad_revenue_by_ip[ip] += float(line[AD_REVENUE])
+        else:
+            ad_revenue_by_ip[ip] = float(line[AD_REVENUE])
 
-        # Send off a mapper job every 10,000 lines
-        line_number += 1
-        if line_number >= 100000:
-            payload = {
-                    'batch': batch,
-                    'job_id': job_id,
-                    'data': ad_revenue_by_ip,
-                    'run_id': run_id,
-            }
-            _invoke_reducer(payload)
+    if not ad_revenue_by_ip:
+        return
 
-            ad_revenue_by_ip = {}
-            batch += 1
-            line_number = 0
-
-
-    # get off anything remaining
-    if ad_revenue_by_ip:
-        payload = {
-                'batch': batch,
-                'job_id': job_id,
-                'data': ad_revenue_by_ip,
-                'run_id': run_id,
-        }
-        _invoke_reducer(payload)
-
-
-    invoke_data = {
-        'batches': batch + 1,
-        'bucket': bucket,
-        'job_id': job_id,
-        'run_id': run_id,
-        'total_jobs': total_jobs,
+    metadata = {
+            'job_id': str(job_id),
+            'run_id': str(run_id),
+            'total_jobs': str(total_jobs),
     }
 
-    invoke_lambda('map-reduce-dev-BatchReducer', invoke_data, invocation_type='RequestResponse')
-
-    # Writing this signals that the batch is all done and that the batch reducer can start
-    # key = 'run-%s/job-%s-batch-done.json' % (run_id, job_id, )
-    # write_to_s3(bucket, key, {
-    #     'batches': batch + 1,
-    #     'job_id': job_id,
-    #     'run_id': run_id,
-    #     'total_jobs': total_jobs,
-    # })
+    key = 'run-%s/mapper-%s-final-done.csv' % (run_id, job_id)
+    write_csv_to_s3(bucket, key, ad_revenue_by_ip, Metadata=metadata)
