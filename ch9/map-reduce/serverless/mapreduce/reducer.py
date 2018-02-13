@@ -1,3 +1,4 @@
+import csv
 import json
 import time
 import os
@@ -18,7 +19,7 @@ from .aws import (
 
 
 def _get_final_results_key(run_id):
-    return 'run-%s/FinalResults.json' % (run_id, )
+    return 'run-%s/FinalResults.csv' % (run_id, )
 
 
 def _get_batch_job_prefix(run_id):
@@ -46,7 +47,7 @@ def reduce(event):
     final_files = [
             (bucket, key) for (_, key) in \
             list_s3_bucket(bucket, prefix) \
-            if key.endswith('-final-done.csv')
+            if key.endswith('-done.csv')
     ]
     if len(final_files) != total_jobs:
         print(
@@ -62,113 +63,31 @@ def reduce(event):
         print('Skipping final reduce step')
         return
 
+    # write blank file to lock the final reduce step
+    write_to_s3(bucket, final_results_key, {})
+
     print('Starting final reduce phase')
 
-    chunk_size = 10
     s3_mapper_files = list_s3_bucket(bucket, prefix)
 
-    chunks = [s3_mapper_files[i: i+chunk_size] for i in range(0, len(s3_mapper_files), chunk_size)]
-    total_chunks = len(chunks)
+    final_results = {}
 
-    for i, chunk in enumerate(chunks):
-        payload = {
-                's3_files': chunk,
-                'total_chunks': total_chunks,
-                'chunk_number': i + 1,
-                'bucket': bucket,
-                'run_id': run_id,
-        }
-        print('Invoke final reducer', payload)
-        invoke_lambda('map-reduce-dev-FinalReducer', payload)
-
-
-def final_reducer(event):
-    print('Received event')
-    print(event)
-
-    s3_files = event['s3_files']
-    total_chunks = event['total_chunks']
-    chunk_number = event['chunk_number']
-    bucket = event['bucket']
-    run_id = event['run_id']
-    level = int(event.get('level', 1))
-
-    prefix = 'run-%s' % (run_id, )
-
-    print('Chunk %s of %s' % (chunk_number, total_chunks))
-
-    results = {}
-
-    for (bucket, key) in s3_files:
+    for (bucket, key) in s3_mapper_files:
         print('reading', key)
 
-        #data = json.loads(read_body_from_s3(bucket, key))
-        fn = download_from_s3(bucket, key)
+        tmp_fn = download_from_s3(bucket, key)
 
-        print('Deleting %s' % (key, ))
-        delete_s3_object(bucket, key)
+        with open(tmp_fn, 'r') as csv_fh:
+            reader = csv.DictReader(csv_fh, fieldnames=('key', 'count'))
+            for line in reader:
+                key = line['key']
+                count = int(line['count'])
 
-        with open(fn, 'r') as fh:
-            for line in fh:
-                ip, score = line.split(',')
-                ip = int(ip)
-                score = float(score)
-
-                if ip in results:
-                    results[ip] += score
+                if key in final_results:
+                    final_results[key] += count
                 else:
-                    results[ip] = score
+                    final_results[key] = count
 
-        os.remove(fn)
-
-        # if not results:
-        #     results = data
-        #     continue
-
-        # for ip, score in data.items():
-        #     try:
-        #         results[ip] += float(score)
-        #     except KeyError:
-        #         results[ip] = float(score)
-
-    print('Final results:', len(results))
+    print('Final final_results:', len(final_results))
     print('Writing fiinal output data')
-    #results_key = '%s/reducer-l%s-%s.json' % (prefix, level, chunk_number)
-    results_key = '%s/reducer-l%s-%s.csv' % (prefix, level, chunk_number)
-    metadata = {
-            'total_chunks': str(total_chunks),
-            'chunk_number': str(chunk_number),
-    }
-    write_csv_to_s3(bucket, results_key, results, Metadata=metadata)
-
-    reducer_prefix = '%s/reducer-l%s' % (prefix, level)
-    finished_reducers = list_s3_bucket(bucket, reducer_prefix)
-    num_finished = len(finished_reducers)
-
-    print('Total number of reduced files:', num_finished)
-    print('All done?', num_finished == int(total_chunks))
-
-    chunk_size = 2
-    if num_finished == int(total_chunks):
-        chunks = [finished_reducers[i: i+chunk_size] for i in range(0, num_finished, chunk_size)]
-        total_chunks = len(chunks)
-        if total_chunks == 1:
-            print('Total chunks is one', total_chunks)
-            return
-
-        for i, chunk in enumerate(chunks):
-            if len(chunk) == 1:
-                print('Chunk of size 1')
-                print(chunk)
-                continue
-
-            payload = {
-                    's3_files': chunk,
-                    'total_chunks': total_chunks,
-                    'chunk_number': i + 1,
-                    'bucket': bucket,
-                    'run_id': run_id,
-                    'level': level + 1,
-            }
-            print(payload)
-            invoke_lambda('map-reduce-dev-FinalReducer', payload)
+    write_csv_to_s3(bucket, final_results_key, final_results)

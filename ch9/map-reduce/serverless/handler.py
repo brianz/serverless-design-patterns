@@ -13,14 +13,12 @@ import mapreduce.reducer
 def driver(event, context):
     prefix = event or 'tiny'
 
-    bucket_name = 'big-data-benchmark'
+    bucket_name = 'brianz-mapreduce-enron-emails'
 
     if prefix == 'large':
-        mapreduce.mapper.crawl(bucket_name, prefix='pavlo/text/1node/uservisits/part-000')
-    elif prefix == 'med':
-        mapreduce.mapper.crawl(bucket_name, prefix='pavlo/text/1node/uservisits/part-0000')
+        mapreduce.mapper.crawl(bucket_name, prefix='')
     else:
-        mapreduce.mapper.crawl(bucket_name, prefix='pavlo/text/tiny/uservisits/part-')
+        mapreduce.mapper.crawl(bucket_name, prefix='xan')
 
 
 def mapper(event, context):

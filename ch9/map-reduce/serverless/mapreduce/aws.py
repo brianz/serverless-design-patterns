@@ -1,7 +1,8 @@
 import boto3
 import botocore
 import csv
-import io
+import glob
+import os
 import json
 import tempfile
 
@@ -40,7 +41,6 @@ def publish_to_sns(payload):
     )
 
 
-import glob
 def download_from_s3(bucket, key, s3=None):
     for fn in glob.glob('/tmp/aws-*'):
         os.remove(fn)

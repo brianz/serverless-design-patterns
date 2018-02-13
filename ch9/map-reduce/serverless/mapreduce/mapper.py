@@ -1,48 +1,32 @@
-import json
 import csv
+import itertools
+import json
 import os
+import sys
 import time
 import uuid
 
-from ipaddress import IPv4Address
+import email.parser
+
+# Make sure we can read big csv files
+csv.field_size_limit(sys.maxsize)
 
 from .aws import (
         download_from_s3,
         invoke_lambda,
         list_s3_bucket,
         publish_to_sns,
+        read_body_from_s3,
         write_to_s3,
         write_csv_to_s3,
 )
 
 from pprint import pprint as pp
 
-IP = 'ip'
-DESTINATION_URL = 'url'
-VISIT_DATA = 'vd'
-AD_REVENUE = 'rev'
-USER_AGENT = 'ua'
-COUNTRY_CODE = 'cc'
-LANGUAGE_CODE = 'lc'
-SEARCH_WORD = 'sw'
-DURATION = 'dur'
-
-USER_VISIT_FIELD_NAMES = (
-        IP,
-        DESTINATION_URL,
-        VISIT_DATA,
-        AD_REVENUE,
-        USER_AGENT,
-        COUNTRY_CODE,
-        LANGUAGE_CODE,
-        SEARCH_WORD,
-        DURATION,
-)
-
 
 def _csv_lines_from_filepath(filepath, delete=True):
     with open(filepath, 'rt') as fh:
-        reader = csv.DictReader(fh, USER_VISIT_FIELD_NAMES)
+        reader = csv.DictReader(fh, fieldnames=('file', 'message'))
         for row in reader:
             yield row
 
@@ -50,7 +34,7 @@ def _csv_lines_from_filepath(filepath, delete=True):
         os.remove(filepath)
 
 
-def crawl(bucket_name, prefix='pavlo/text/tiny/uservisits/part-'):
+def crawl(bucket_name, prefix=''):
     """Entrypoint for a map-reduce job.
 
     The function is responsible for crawling a particular S3 bucket and publishing map jobs
@@ -88,20 +72,32 @@ def map(event):
     run_id = message['run_id']
     job_id = message['job_id']
 
-    tmp_file = download_from_s3(message['bucket'], message['key'])
+    counts = {}
 
-    ad_revenue_by_ip = {}
-    line_number = 0
     bucket = 'brianz-dev-mapreduce-results'
 
-    for line in _csv_lines_from_filepath(tmp_file):
-        ip = int(IPv4Address(line['ip']))
-        if ip in ad_revenue_by_ip:
-            ad_revenue_by_ip[ip] += float(line[AD_REVENUE])
-        else:
-            ad_revenue_by_ip[ip] = float(line[AD_REVENUE])
+    tmp_file = download_from_s3(message['bucket'], message['key'])
 
-    if not ad_revenue_by_ip:
+    parser = email.parser.Parser()
+
+    for line in _csv_lines_from_filepath(tmp_file):
+        msg = line['message']
+        eml = parser.parsestr(msg, headersonly=True)
+        _from = eml['From']
+        _tos = eml.get('To')
+
+        if not _tos:
+            continue
+
+        _tos = (t.strip() for t in _tos.split(','))
+
+        for from_to in itertools.product([_from], _tos):
+            if from_to not in counts:
+                counts[from_to] = 1
+            else:
+                counts[from_to] += 1
+
+    if not counts:
         return
 
     metadata = {
@@ -110,5 +106,5 @@ def map(event):
             'total_jobs': str(total_jobs),
     }
 
-    key = 'run-%s/mapper-%s-final-done.csv' % (run_id, job_id)
-    write_csv_to_s3(bucket, key, ad_revenue_by_ip, Metadata=metadata)
+    key = 'run-%s/mapper-%s-done.csv' % (run_id, job_id)
+    write_csv_to_s3(bucket, key, counts, Metadata=metadata)

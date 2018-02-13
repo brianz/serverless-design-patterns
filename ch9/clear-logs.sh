@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for NAME in Mapper FinalReducer; do
+for NAME in Driver Mapper Reducer; do
 #for NAME in Driver Reducer Mapper BatchReducer FinalReducer; do
 GROUP_NAME="/aws/lambda/map-reduce-dev-$NAME"
 

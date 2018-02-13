@@ -17,6 +17,8 @@ provider:
       Resource:
         - "arn:aws:s3:::big-data-benchmark"
         - "arn:aws:s3:::big-data-benchmark/*"
+        - "arn:aws:s3:::brianz-mapreduce-enron-emails"
+        - "arn:aws:s3:::brianz-mapreduce-enron-emails/*"
         - "arn:aws:s3:::brianz-${env:ENV}-mapreduce-results"
         - "arn:aws:s3:::brianz-${env:ENV}-mapreduce-results/*"
     - Effect: "Allow"
@@ -64,16 +66,7 @@ functions:
           bucket: brianz-${env:ENV}-mapreduce-results
           event: s3:ObjectCreated:*
           rules:
-            - suffix: '-final-done.csv'
-  FinalReducer:
-    handler: handler.final_reducer
-    memorySize: 3008
-    # events:
-    #   - s3:
-    #       bucket: brianz-${env:ENV}-mapreduce-results
-    #       event: s3:ObjectCreated:*
-    #       rules:
-    #         - suffix: 'FinalResults.json'
+            - suffix: '-done.csv'
 
 
 plugins:
