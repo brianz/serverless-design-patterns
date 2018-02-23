@@ -26,12 +26,12 @@ provider:
         - "sns:*"
       Resource:
         Ref: SNSMapperTopic
-    - Effect: Allow
-      Action:
-        - lambda:InvokeFunction
-      Resource:
-        - "arn:aws:lambda:${env:AWS_REGION}:*:function:map-reduce-${opt:stage}-Reducer"
-        - "arn:aws:lambda:${env:AWS_REGION}:*:function:map-reduce-${opt:stage}-FinalReducer"
+    # - Effect: Allow
+    #   Action:
+    #     - lambda:InvokeFunction
+    #   Resource:
+    #     - "arn:aws:lambda:${env:AWS_REGION}:*:function:map-reduce-${opt:stage}-Reducer"
+    #     - "arn:aws:lambda:${env:AWS_REGION}:*:function:map-reduce-${opt:stage}-FinalReducer"
 
 package:
   exclude:

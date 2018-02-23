@@ -6,6 +6,7 @@ from pathlib import Path
 CWD = Path(__file__).resolve().cwd() / 'lib'
 sys.path.insert(0, str(CWD))
 
+import mapreduce.driver
 import mapreduce.mapper
 import mapreduce.reducer
 
@@ -16,9 +17,9 @@ def driver(event, context):
     bucket_name = 'brianz-mapreduce-enron-emails'
 
     if prefix == 'large':
-        mapreduce.mapper.crawl(bucket_name, prefix='')
+        mapreduce.driver.crawl(bucket_name, prefix='')
     else:
-        mapreduce.mapper.crawl(bucket_name, prefix='xan')
+        mapreduce.driver.crawl(bucket_name, prefix='xan')
 
 
 def mapper(event, context):

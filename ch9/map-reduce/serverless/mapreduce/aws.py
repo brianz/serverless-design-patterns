@@ -21,17 +21,6 @@ def _get_client(service):
     return client
 
 
-
-def invoke_lambda(name, payload, invocation_type='Event'):
-    client = _get_client('lambda')
-    payload = bytes(json.dumps(payload), 'utf-8')
-    response = client.invoke(
-        FunctionName=name,
-        InvocationType=invocation_type,
-        Payload=payload,
-    )
-
-
 def publish_to_sns(payload):
     client = _get_client('sns')
     client.publish(
@@ -74,16 +63,6 @@ def s3_file_exists(bucket, key):
 def read_from_s3(bucket, key):
     client = _get_client('s3')
     return client.get_object(Bucket=bucket, Key=key)
-
-
-def read_body_from_s3(bucket, key):
-    obj = read_from_s3(bucket, key)
-    return obj['Body'].read()
-
-
-def delete_s3_object(bucket, key):
-    client = _get_client('s3')
-    return client.delete_object(Bucket=bucket, Key=key)
 
 
 def write_to_s3(bucket, key, payload, **kwargs):

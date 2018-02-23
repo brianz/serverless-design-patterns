@@ -4,7 +4,6 @@ import json
 import os
 import sys
 import time
-import uuid
 
 import email.parser
 
@@ -13,15 +12,8 @@ csv.field_size_limit(sys.maxsize)
 
 from .aws import (
         download_from_s3,
-        invoke_lambda,
-        list_s3_bucket,
-        publish_to_sns,
-        read_body_from_s3,
-        write_to_s3,
         write_csv_to_s3,
 )
-
-from pprint import pprint as pp
 
 
 def _csv_lines_from_filepath(filepath, delete=True):
@@ -34,37 +26,6 @@ def _csv_lines_from_filepath(filepath, delete=True):
         os.remove(filepath)
 
 
-def crawl(bucket_name, prefix=''):
-    """Entrypoint for a map-reduce job.
-
-    The function is responsible for crawling a particular S3 bucket and publishing map jobs
-    asyncrhonously using SNS where the mapping is 1-to-1, file-to-sns.
-
-    It's presumed that lambda mapper functions are hooked up to the SNS topic. These Lambda mappers
-    will each work on a particular file.
-
-    """
-    print('Starting at: %s: %s' % (time.time(), time.asctime(), ))
-    # Unique identifer for the entire map-reduce run
-    run_id = str(uuid.uuid4())
-    mapper_data = [
-            {
-                'bucket': bucket,
-                'job_id': str(uuid.uuid4()),
-                'key': key,
-                'run_id': run_id,
-            } for (bucket, key) in list_s3_bucket(bucket_name, prefix)
-    ]
-
-    # Let's add in the total number of jobs which will be kicked off.
-    num_mappers = len(mapper_data)
-
-    for i, mapper_dict in enumerate(mapper_data):
-        mapper_dict['total_jobs'] = num_mappers
-        mapper_dict['job_id'] = i
-        publish_to_sns(mapper_dict)
-
-
 def map(event):
     message = json.loads(event['Records'][0]['Sns']['Message'])
 
@@ -75,6 +36,7 @@ def map(event):
     counts = {}
 
     bucket = 'brianz-dev-mapreduce-results'
+    bucket = os.environ['REDUCE_RESULTS_BUCKET']
 
     tmp_file = download_from_s3(message['bucket'], message['key'])
 

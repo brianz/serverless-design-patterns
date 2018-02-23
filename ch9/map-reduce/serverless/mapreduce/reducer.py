@@ -6,12 +6,9 @@ import uuid
 import io
 
 from .aws import (
-        delete_s3_object,
         download_from_s3,
         list_s3_bucket,
-        invoke_lambda,
         read_from_s3,
-        read_body_from_s3,
         s3_file_exists,
         write_to_s3,
         write_csv_to_s3,
