@@ -1,9 +1,6 @@
 import csv
 import json
 import time
-import os
-import uuid
-import io
 
 from .aws import (
         download_from_s3,
@@ -85,6 +82,6 @@ def reduce(event):
                 else:
                     final_results[key] = count
 
-    print('Final final_results:', len(final_results))
-    print('Writing fiinal output data')
+    print('Finished at: %s: %s' % (time.time(), time.asctime(), ))
+    print('Final results length:', len(final_results))
     write_csv_to_s3(bucket, final_results_key, final_results)
