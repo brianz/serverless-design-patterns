@@ -1,0 +1,25 @@
+service: error-handler
+
+provider:
+  name: aws
+  runtime: python3.6
+  region: ${env:AWS_REGION}
+  state: ${env:$ENV}
+  environment:
+    SENTRY_ENVIRONMENT: ${env:$ENV}
+    SENTRY_DSN: ${env:$SENTRY_DSN}
+
+package:
+  exclude:
+    - .git/**
+    - __pycache__/**
+    - "**/__pycache__/**"
+    - "*.pyc"
+    - "*.swp"
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - http: GET /
+
