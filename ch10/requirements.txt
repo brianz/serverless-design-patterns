@@ -1,1 +1,2 @@
 raven-python-lambda
+rollbar

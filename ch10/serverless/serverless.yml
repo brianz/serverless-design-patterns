@@ -6,8 +6,9 @@ provider:
   region: ${env:AWS_REGION}
   state: ${env:$ENV}
   environment:
-    SENTRY_ENVIRONMENT: ${env:$ENV}
-    SENTRY_DSN: ${env:$SENTRY_DSN}
+    SENTRY_ENVIRONMENT: ${env:ENV}
+    SENTRY_DSN: ${env:SENTRY_DSN}
+    ROLLBAR_KEY: ${env:ROLLBAR_KEY}
 
 package:
   exclude:
@@ -18,8 +19,12 @@ package:
     - "*.swp"
 
 functions:
-  hello:
-    handler: handler.hello
+  divide:
+    handler: handler.divide
     events:
       - http: GET /
+  process:
+    handler: handler.process
+    events:
+      - http: GET /process
 

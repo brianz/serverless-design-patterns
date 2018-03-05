@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 
 from pathlib import Path
@@ -6,13 +7,13 @@ from pathlib import Path
 CWD = Path(__file__).resolve().cwd() / 'lib'
 sys.path.insert(0, str(CWD))
 
-from raven import Client # Offical `raven` module
 from raven_python_lambda import RavenLambdaWrapper
 
 
+
 @RavenLambdaWrapper()
-def hello(event, context):
-    params = event.get('queryStringParameters', {})
+def divide(event, context):
+    params = event.get('queryStringParameters') or {}
     numerator = int(params.get('numerator', 10))
     denominator = int(params.get('denominator', 2))
     body = {
@@ -29,3 +30,19 @@ def hello(event, context):
     }
 
     return response
+
+
+state_variable = None
+
+def process(event, context):
+    global state_variable
+
+    if not state_variable:
+        print("Initializging state_variable")
+        state_variable = 0
+
+    state_variable += 1
+    return {
+        'statusCode': 200,
+        'body': json.dumps({'state_variable': state_variable}),
+    }
