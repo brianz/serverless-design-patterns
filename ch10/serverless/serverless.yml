@@ -5,14 +5,15 @@ provider:
   runtime: python3.6
   region: ${env:AWS_REGION}
   state: ${env:$ENV}
+  timeout: 4
   environment:
     SENTRY_ENVIRONMENT: ${env:ENV}
     SENTRY_DSN: ${env:SENTRY_DSN}
     ROLLBAR_KEY: ${env:ROLLBAR_KEY}
-  IamRoleStatements:
+  iamRoleStatements:
     - Effect: Allow
       Action:
-      - KMS:Decrypt
+        - KMS:Decrypt
       Resource: ${env:KEY_ARN}
 
 package:
@@ -32,3 +33,13 @@ functions:
     handler: handler.process
     events:
       - http: GET /process
+    environment:
+      DB_PASSWORD: ${env:DB_PASSWORD}
+
+plugins:
+  - serverless-prune-plugin
+
+custom:
+  prune:
+    automatic: true
+    number: 2

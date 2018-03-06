@@ -31,6 +31,8 @@ libs :
 	rm -rf $(LIBS_DIR)/*.dist-info
 	find $(LIBS_DIR) -name '*.pyc' | xargs rm
 	find $(LIBS_DIR) -name tests | xargs rm -rf
+	find $(LIBS_DIR) -name boto* -type d | xargs rm -rf
+	find $(LIBS_DIR) -name s3* -type d | xargs rm -rf
 .PHONY: libs
 
 # NOTE:
