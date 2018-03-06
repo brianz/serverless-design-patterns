@@ -9,6 +9,11 @@ provider:
     SENTRY_ENVIRONMENT: ${env:ENV}
     SENTRY_DSN: ${env:SENTRY_DSN}
     ROLLBAR_KEY: ${env:ROLLBAR_KEY}
+  IamRoleStatements:
+    - Effect: Allow
+      Action:
+      - KMS:Decrypt
+      Resource: ${env:KEY_ARN}
 
 package:
   exclude:
@@ -27,4 +32,3 @@ functions:
     handler: handler.process
     events:
       - http: GET /process
-
