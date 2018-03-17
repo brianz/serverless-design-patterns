@@ -10,9 +10,12 @@ provider:
       Action:
         - "s3:GetObject"
         - "s3:ListBucket"
+        - "s3:PutObject"
       Resource:
         - "arn:aws:s3:::brianz-gdax-${env:ENV}-firehose"
         - "arn:aws:s3:::brianz-gdax-${env:ENV}-firehose/*"
+        - "arn:aws:s3:::brianz-gdax-${env:ENV}-results"
+        - "arn:aws:s3:::brianz-gdax-${env:ENV}-results/*"
 
 package:
   exclude:
@@ -25,6 +28,41 @@ package:
 
 resources:
   Resources:
+    GdaxFirehoseRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: gdax_${env:ENV}_firehose_delivery_role
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - firehose.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        Path: /
+        Policies:
+          - PolicyName: ${env:ENV}_gdax_firehose_policy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - kinesis:DescribeStream
+                    - kinesis:GetRecords
+                    - kinesis:GetShardIterator
+                    - logs:PutLogEvents
+                    - s3:AbortMultipartUpload
+                    - s3:GetBucketLocation
+                    - s3:GetObject
+                    - s3:ListBucket
+                    - s3:ListBucketMultipartUploads
+                    - s3:PutObject
+                  Resource:
+                    - "arn:aws:logs:${env:ENV}:*:log-group:/aws/kinesisfirehose/brianz-gdax-${env:ENV}-stream:log-stream:*"
+                    - "arn:aws:s3:::brianz-gdax-${env:ENV}-firehose"
+                    - "arn:aws:s3:::brianz-gdax-${env:ENV}-firehose/*"
     GdaxFirehoseStream:
       Type: AWS::KinesisFirehose::DeliveryStream
       Properties:
@@ -36,7 +74,14 @@ resources:
             IntervalInSeconds: 60
             SizeInMBs: 5
           CompressionFormat: UNCOMPRESSED
-          RoleARN: "arn:aws:iam::679892560156:role/brianz_firehose_delivery_role"
+          RoleARN:
+            Fn::GetAtt:
+              - GdaxFirehoseRole
+              - Arn
+    GdaxS3ResultsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: brianz-gdax-${env:ENV}-results
 
 functions:
   hello:
@@ -45,15 +90,5 @@ functions:
       - s3:
           bucket: brianz-gdax-${env:ENV}-firehose
           event: s3:ObjectCreated:*
-
-# you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"
+    environment:
+      DESTINATION_BUCKET: brianz-gdax-${env:ENV}-results
