@@ -7,7 +7,6 @@ from datetime import datetime
 
 from lambda_arch.aws import (
         get_matching_s3_keys,
-        list_s3_bucket,
         read_body_from_s3,
         write_to_dynamo_table,
         write_to_s3,
