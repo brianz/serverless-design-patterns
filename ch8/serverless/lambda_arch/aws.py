@@ -40,13 +40,6 @@ def write_to_s3(bucket, key, payload, **kwargs):
     )
 
 
-def list_s3_bucket(name, prefix=None, **kwargs):
-    s3 = boto3.resource('s3')
-    bucket = s3.Bucket(name=name)
-    results = bucket.objects.filter(Prefix=prefix, **kwargs)
-    return [(r.bucket_name, r.key) for r in results]
-
-
 def get_matching_s3_objects(bucket, prefix='', suffix=''):
     s3 = _get_client('s3')
     kwargs = {'Bucket': bucket}
