@@ -18,7 +18,7 @@ provider:
         - "arn:aws:s3:::brianz-gdax-${env:ENV}-results/*"
     - Effect: "Allow"
       Action:
-        - "dynamodb:*"
+        - "dynamodb:PutItem"
       Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/brianz-gdax-${env:ENV}-realtime"
 
 
