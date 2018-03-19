@@ -16,17 +16,9 @@ provider:
         - "arn:aws:s3:::brianz-gdax-${env:ENV}-firehose/*"
         - "arn:aws:s3:::brianz-gdax-${env:ENV}-results"
         - "arn:aws:s3:::brianz-gdax-${env:ENV}-results/*"
-    - Effect: Allow
-      Action:
-        - kinesis:DescribeStream
-        - kinesis:GetRecords
-        - kinesis:GetShardIterator
-        - kinesis:ListStreams
-      Resource:
-        - "arn:aws:kinesis:${env:ENV}:*:stream/brianz-gdax-${env:ENV}-kinesis-stream"
     - Effect: "Allow"
       Action:
-        - "dynamodb:*"
+        - "dynamodb:PutItem"
       Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/brianz-gdax-${env:ENV}-realtime"
 
 
