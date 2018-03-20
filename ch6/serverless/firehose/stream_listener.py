@@ -37,7 +37,6 @@ class PhotoStreamListener(tweepy.StreamListener):
         hashtags = self._get_hashtags(container.get('entities', {}))
 
         if all_urls:
-            print tweet.text
             for url in all_urls:
                 publish_tweet({
                     'text': tweet.text,

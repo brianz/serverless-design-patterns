@@ -19,7 +19,7 @@ tags = ['#dog', '#dogs', '#puppy', '#cat', '#kitty', '#lolcat', '#badkitty']
 
 class MyStreamListener(tweepy.StreamListener):
 
-    def _get_media_url(self, media):
+    def _get_media_urls(self, media):
         if not media:
             return []
 
@@ -34,7 +34,7 @@ class MyStreamListener(tweepy.StreamListener):
 
         all_urls = set()
         for media in (entities, extended_entities, extended_tweet):
-            urls = self._get_media_url(media)
+            urls = self._get_media_urls(media)
             all_urls.update(set(urls))
 
         print
