@@ -21,6 +21,7 @@ os.environ.update({
 
 if os.environ.get('CIRCLECI'):
     os.environ['CUPPING_DB_HOST'] = 'localhost'
+    os.environ['CUPPING_DB_NAME'] = 'cupping_test'
 
 
 from cupping.models import (
