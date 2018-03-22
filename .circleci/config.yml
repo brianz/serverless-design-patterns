@@ -9,14 +9,6 @@ jobs:
       - ENV: circleci
     steps:
       - checkout
-      - run:
-          name: Setup envs
-          working_directory: ch2
-          command: |
-            mkdir envs
-            echo "CUPPING_DB_USERNAME=postgres" > envs/circleci
-            echo "CUPPING_DB_PASSWORD=" >> envs/circleci
-            echo "CUPPING_DB_NAME=cupping_test" >> envs/circleci
       - restore_cache:
           key: dependency-cache-{{ checksum "ch2/requirements.txt" }}
       - run:
