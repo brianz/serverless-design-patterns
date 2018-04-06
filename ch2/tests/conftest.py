@@ -16,29 +16,28 @@ ENV = os.environ['ENV']
 os.environ.update({
     'CUPPING_DB_PASSWORD': '',
     'CUPPING_DB_USERNAME': 'postgres',
-    'CUPPING_DB_HOST': 'cupping-%s-postgres' % ENV,
+    'CUPPING_DB_HOST': 'db',
 })
 
 if os.environ.get('CIRCLECI'):
     os.environ['CUPPING_DB_HOST'] = 'localhost'
     os.environ['CUPPING_DB_NAME'] = 'cupping_test'
 
-
 from cupping.models import (
-        CuppingModel,
-        SessionModel,
+    CuppingModel,
+    SessionModel,
 )
 from cupping.persistence import (
-        Cupping,
-        Session,
+    Cupping,
+    Session,
 )
 from cupping.db import (
-        _clear_tables,
-        _drop_tables,
-        close_db,
-        get_session,
-        commit_session,
-        setup_db,
+    _clear_tables,
+    _drop_tables,
+    close_db,
+    get_session,
+    commit_session,
+    setup_db,
 )
 
 
@@ -99,7 +98,10 @@ def cuppings_dicts():
     return [
         {
             'name': 'Huehue',
-            'scores': {'Aroma': 8.6, 'Flavor': 5.5},
+            'scores': {
+                'Aroma': 8.6,
+                'Flavor': 5.5
+            },
             'overallScore': 75,
             'defects': ['stank', 'pu'],
             'descriptors': ['honey', 'berry', 'mungy'],
@@ -108,7 +110,10 @@ def cuppings_dicts():
         },
         {
             'name': 'Kochere',
-            'scores': {'Aroma': 5.6, 'Flavor': 8.4},
+            'scores': {
+                'Aroma': 5.6,
+                'Flavor': 8.4
+            },
             'overallScore': 85,
             'defects': [],
             'descriptors': [],
