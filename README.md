@@ -11,7 +11,7 @@ To be published by Packt Publishing spring 2018
 
 These projects were bootstrapped using the Very Serverless Cookiecutter template. This is a
 opinionated setup in order to facilitate developing, running and bootstrapping Serverless projects
-authored in Python.
+authored in mainly in Python.
 
 For more information, see the following:
 
