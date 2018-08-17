@@ -12,14 +12,14 @@ provider:
         - "s3:ListBucket"
         - "s3:PutObject"
       Resource:
-        - "arn:aws:s3:::brianz-gdax-${env:ENV}-firehose"
-        - "arn:aws:s3:::brianz-gdax-${env:ENV}-firehose/*"
-        - "arn:aws:s3:::brianz-gdax-${env:ENV}-results"
-        - "arn:aws:s3:::brianz-gdax-${env:ENV}-results/*"
+        - "arn:aws:s3:::${self:custom.firehoseBucketName}"
+        - "arn:aws:s3:::${self:custom.firehoseBucketName}/*"
+        - "arn:aws:s3:::${self:custom.resultsBucketName}"
+        - "arn:aws:s3:::${self:custom.resultsBucketName}/*"
     - Effect: "Allow"
       Action:
         - "dynamodb:PutItem"
-      Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/brianz-gdax-${env:ENV}-realtime"
+      Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.dynamoDbTableName}"
 
 
 package:
@@ -30,6 +30,13 @@ package:
     - "*.pyc"
     - "*.swp"
 
+custom:
+  deliveryStreamName: ${self:service.name}-${env:ENV}-fh-stream
+  dynamoDbTableName: ${self:service.name}-${env:ENV}-realtime
+  kinesisStreamName: ${self.service.name}-${env:ENV}-kinesis-stream
+  firehoseBucketName: ${env:S3_BUCKET_PREFIX}-${env:ENV}-firehose
+  resultsBucketName: ${env:S3_BUCKET_PREFIX}-${env:ENV}-results
+  s3BucketName: ${env:S3_BUCKET_PREFIX}-${env:ENV}
 
 resources:
   Resources:
@@ -38,7 +45,7 @@ resources:
     GdaxKinesisStream:
       Type: AWS::Kinesis::Stream
       Properties:
-        Name: brianz-gdax-${env:ENV}-kinesis-stream
+        Name: ${self:custom.kinesisStreamName}
         RetentionPeriodHours: 24
         ShardCount: 1
     # The firehose stream will be used to batch write data to S3 every 60s. The data source for
@@ -49,10 +56,10 @@ resources:
       # This DependsOn attribute is a bit of a hack. Severless does not add this automatically and
       # the initial deployment fails if the S3 destination bucket is not created before this stream
       # is created.
-      DependsOn:
-        - S3BucketBrianzgdax${env:ENV}firehose
+      # DependsOn:
+      #   - S3BucketBrianzgdax${env:ENV}firehose
       Properties:
-        DeliveryStreamName: brianz-gdax-${env:ENV}-fh-stream
+        DeliveryStreamName: ${self:custom.deliveryStreamName}
         DeliveryStreamType: KinesisStreamAsSource
         KinesisStreamSourceConfiguration:
           KinesisStreamARN:
@@ -64,7 +71,7 @@ resources:
               - GdaxFirehoseRole
               - Arn
         S3DestinationConfiguration:
-          BucketARN: "arn:aws:s3:::brianz-gdax-${env:ENV}-firehose"
+          BucketARN: "arn:aws:s3:::${self:custom.firehoseBucketName}"
           BufferingHints:
             IntervalInSeconds: 60
             SizeInMBs: 5
@@ -101,8 +108,8 @@ resources:
                     - s3:ListBucketMultipartUploads
                     - s3:PutObject
                   Resource:
-                    - "arn:aws:s3:::brianz-gdax-${env:ENV}-firehose"
-                    - "arn:aws:s3:::brianz-gdax-${env:ENV}-firehose/*"
+                    - "arn:aws:s3:::${self:custom.firehoseBucketName}"
+                    - "arn:aws:s3:::${self:custom.firehoseBucketName}/*"
                 - Effect: Allow
                   Action:
                     - kinesis:DescribeStream
@@ -110,11 +117,11 @@ resources:
                     - kinesis:GetShardIterator
                     - kinesis:ListStreams
                   Resource:
-                    - "arn:aws:kinesis:${env:AWS_REGION}:*:stream/brianz-gdax-${env:ENV}-kinesis-stream"
+                    - "arn:aws:kinesis:${env:AWS_REGION}:*:stream/${self:custom.kinesisStreamName}"
     GdaxRealtimeTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: brianz-gdax-${env:ENV}-realtime
+        TableName: ${self:custom.dynamoDbTableName}
         AttributeDefinitions:
           - AttributeName: productTrade
             AttributeType: S
@@ -138,24 +145,24 @@ functions:
               - GdaxKinesisStream
               - Arn
     environment:
-      TABLE_NAME: brianz-gdax-${env:ENV}-realtime
+      TABLE_NAME: ${self:custom.dynamoDbTableName}
   CalculateMinuteView:
     handler: handler.minute
     memorySize: 256
     timeout: 10
     events:
       - s3:
-          bucket: brianz-gdax-${env:ENV}-firehose
+          bucket: ${self:custom.firehoseBucketName}
           event: s3:ObjectCreated:*
     environment:
-      DESTINATION_BUCKET: brianz-gdax-${env:ENV}-results
+      DESTINATION_BUCKET: ${self:custom.resultsBucketName}
   CalculateHourlyView:
     handler: handler.hourly
     memorySize: 512
     timeout: 60
     events:
       - s3:
-          bucket: brianz-gdax-${env:ENV}-results
+          bucket: ${self:custom.resultsBucketName}
           event: s3:ObjectCreated:*
           rules:
             - suffix: '59-minute.json'
@@ -165,7 +172,7 @@ functions:
     timeout: 300
     events:
       - s3:
-          bucket: brianz-gdax-${env:ENV}-results
+          bucket: ${self:custom.resultsBucketName}
           event: s3:ObjectCreated:*
           rules:
             - suffix: '23-hour.json'

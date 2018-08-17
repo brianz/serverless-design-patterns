@@ -1,4 +1,4 @@
-NAME = "verypossible/serverless:1.24.0-python3"
+NAME = "verypossible/serverless:1.26.1-python3"
 
 ENVDIR=envs
 LIBS_DIR=serverless

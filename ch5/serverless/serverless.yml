@@ -5,6 +5,7 @@ provider:
   runtime: nodejs4.3
   region: ${env:AWS_REGION}
   timeout: 30
+  versionFunctions: false
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -14,17 +15,20 @@ provider:
       Action:
         - s3:PutObject
       Resource:
-        - "arn:aws:s3:::brianz-image-resize-fanout-results/*"
+        - "arn:aws:s3:::${env:RESIZE_BUCKET_NAME}-${env:ENV}-results/*"
+
+Resources:
+  resources:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ${env:RESIZE_BUCKET_NAME-${env:ENV}-results
 
 functions:
   UploadImage:
     handler: handler.uploadImage
     events:
       - s3:
-          bucket: brianz-image-resize-fanout
+          bucket: ${env:RESIZE_BUCKET_NAME}-${env:ENV}
           event: s3:ObjectCreated:*
   ResizeImage:
     handler: handler.resizeImage
-
-plugins:
-  - serverless-prune-plugin

@@ -1,0 +1,18 @@
+# Below shows a minimal example env file for this project.
+#
+# Fill in values for the environment variables for your own system. The values shown below are just
+# examples of the format and possible options. You can change then to whatever makes sense for your
+# own AWS account.
+#
+AWS_REGION=us-west-2
+AWS_SECRET_ACCESS_KEY=262QYAKIEowwBEEFZ234jakasdfjklKALJA123JT
+AWS_ACCESS_KEY_ID=KALAJ5Q34SYE6OJMTCAQ
+
+VPC_ID=vpc-b038ede0
+SUBNET_ID_A=subnet-3219c334
+SUBNET_ID_B=subnet-023da234
+SUBNET_ID_C=subnet-832adb30
+
+CUPPING_DB_USERNAME=root
+CUPPING_DB_PASSWORD=password
+CUPPING_DB_NAME=cupping_log

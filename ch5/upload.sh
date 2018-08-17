@@ -5,4 +5,4 @@ else
     IMG="$1"
 fi
 
-aws s3 cp "$IMG" s3://brianz-image-resize-fanout/ --acl public-read
+aws s3 cp "$IMG" s3://brianz-serverless-resize-dev/ --acl public-read
