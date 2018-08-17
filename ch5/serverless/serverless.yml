@@ -17,11 +17,12 @@ provider:
       Resource:
         - "arn:aws:s3:::${env:RESIZE_BUCKET_NAME}-${env:ENV}-results/*"
 
-Resources:
-  resources:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: ${env:RESIZE_BUCKET_NAME-${env:ENV}-results
+resources:
+  Resources:
+    ResultsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${env:RESIZE_BUCKET_NAME-${env:ENV}-results
 
 functions:
   UploadImage:

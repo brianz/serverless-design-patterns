@@ -3,7 +3,7 @@ import pytest
 from decimal import Decimal
 from schematics.exceptions import DataError
 
-from cupping.handlers.helpers  import prettify_schematics_errors
+from cupping.handlers.helpers import prettify_schematics_errors
 from cupping.models import CuppingModel
 
 
@@ -20,43 +20,39 @@ def test_cupping_invalid_cupping_score():
         })
 
     errors = prettify_schematics_errors(e)
-    assert errors == {
-           'scores': {
-               'Aroma': "Number 'abc' failed to convert to a decimal."
-            }
-    }
+    assert errors == {'scores': {'Aroma': "Value 'abc' is not decimal."}}
 
 
 def test_cupping_overall_score_min_value():
     c = CuppingModel({
         'name': 'Tester',
         'session_id': 10,
-        'scores': {'aroma': 5},
+        'scores': {
+            'aroma': 5
+        },
         'overall_score': '-0.1',
     })
     with pytest.raises(DataError) as e:
         c.validate()
 
     errors = prettify_schematics_errors(e)
-    assert errors == {
-           'overallScore': 'Value should be greater than or equal to 0.'
-    }
+    assert errors == {'overallScore': 'Decimal value should be greater than or equal to 0.'}
 
 
 def test_cupping_overall_score_max_value():
     c = CuppingModel({
         'name': 'Tester',
         'session_id': 10,
-        'scores': {'aroma': 5},
+        'scores': {
+            'aroma': 5
+        },
         'overall_score': '100.1',
     })
     with pytest.raises(DataError) as e:
         c.validate()
 
     errors = prettify_schematics_errors(e)
-    assert errors == {
-           'overallScore': 'Value should be less than or equal to 100.'
-    }
+    assert errors == {'overallScore': 'Decimal value should be less than or equal to 100.'}
 
 
 def test_cupping_scores_required():
@@ -69,9 +65,7 @@ def test_cupping_scores_required():
         c.validate()
 
     errors = prettify_schematics_errors(e)
-    assert errors == {
-           'scores': 'This field is required.'
-    }
+    assert errors == {'scores': 'This field is required.'}
 
 
 def test_cupping_scores_empty():
@@ -85,9 +79,7 @@ def test_cupping_scores_empty():
         c.validate()
 
     errors = prettify_schematics_errors(e)
-    assert errors == {
-           'scores': 'This field is required.'
-    }
+    assert errors == {'scores': 'This field is required.'}
 
 
 def test_cupping_invalid_overall_score():
@@ -99,9 +91,7 @@ def test_cupping_invalid_overall_score():
         })
 
     errors = prettify_schematics_errors(e)
-    assert errors == {
-           'overallScore': "Number 'abc' failed to convert to a decimal."
-    }
+    assert errors == {'overallScore': "Value 'abc' is not decimal."}
 
 
 def test_cupping_name_required():
@@ -111,15 +101,12 @@ def test_cupping_name_required():
         'scores': {
             'Aroma': 12,
         },
-
     })
     with pytest.raises(DataError) as e:
         c.validate()
 
     errors = prettify_schematics_errors(e)
-    assert errors == {
-           'name': 'This field is required.'
-    }
+    assert errors == {'name': 'This field is required.'}
 
 
 def test_cupping_name_min_length():
@@ -130,15 +117,12 @@ def test_cupping_name_min_length():
         'scores': {
             'Aroma': 12,
         },
-
     })
     with pytest.raises(DataError) as e:
         c.validate()
 
     errors = prettify_schematics_errors(e)
-    assert errors == {
-           'name': 'String value is too short.'
-    }
+    assert errors == {'name': 'String value is too short.'}
 
 
 def test_cupping_name_max_length():
@@ -149,12 +133,9 @@ def test_cupping_name_max_length():
         'scores': {
             'Aroma': 12,
         },
-
     })
     with pytest.raises(DataError) as e:
         c.validate()
 
     errors = prettify_schematics_errors(e)
-    assert errors == {
-           'name': 'String value is too long.'
-    }
+    assert errors == {'name': 'String value is too long.'}

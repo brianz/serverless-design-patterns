@@ -8,19 +8,19 @@ sys.path.insert(0, str(CWD))
 
 import simplejson as json
 
+from cupping.db import session_committer
 from cupping.handlers.session import (
-        handle_session,
-        handle_session_detail,
+    handle_session,
+    handle_session_detail,
 )
 
 from cupping.exceptions import Http404
 
-CORS_HEADERS = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Credentials': True
-}
+CORS_HEADERS = {'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Credentials': True}
 
-def session(event, context):
+
+@session_committer
+def session(event, _context):
     """/session endpoint for POST or GET"""
     http_method = event['httpMethod']
 
@@ -43,6 +43,7 @@ def session(event, context):
     return response
 
 
+@session_committer
 def session_detail(event, context):
     http_method = event['httpMethod']
 

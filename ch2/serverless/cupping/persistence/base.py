@@ -1,27 +1,27 @@
 from sqlalchemy import (
-        Column,
-        Integer,
-        DateTime,
-        text,
+    Column,
+    Integer,
+    DateTime,
+    text,
 )
 
 from ..db.mixins import (
-        CuppingServiceModelMixin,
-)
+    CuppingServiceModelMixin, )
 
 from ..helpers import utcnow
 
 
 class CuppingServiceBaseMixin(CuppingServiceModelMixin):
-    id =  Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
 
-    created = Column(DateTime,
-            nullable=False,
-            server_default=text('NOW()'),
+    created = Column(
+        DateTime,
+        nullable=False,
+        server_default=text('NOW()'),
     )
-    updated = Column(DateTime,
-            nullable=False,
-            server_default=text('NOW()'),
-            onupdate=utcnow,
-            #server_onupdate=text('NOW()'),
+    updated = Column(
+        DateTime,
+        nullable=False,
+        server_default=text('NOW()'),
+        onupdate=utcnow,
     )

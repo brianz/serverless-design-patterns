@@ -59,6 +59,14 @@ resources:
           ToPort: '5432'
           SourceSecurityGroupId:
             Ref: ServerlessSecurityGroup
+        # You can put in the security group of one of your EC2 intances
+        # here, which allows inbound access into the RDS instance from the EC2
+        # instance. This provides you the security of keeping your RDS instance
+        # inaccessible from the public internet.
+        # - IpProtocol: tcp
+        #   FromPort: '5432'
+        #   ToPort: '5432'
+        #   SourceSecurityGroupId: sg-c7dfdcbe
     RDSSubnetGroup:
       Type: AWS::RDS::DBSubnetGroup
       Properties:
