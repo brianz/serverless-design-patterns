@@ -33,8 +33,8 @@ package:
 custom:
   deliveryStreamName: ${self:service.name}-${env:ENV}-fh-stream
   dynamoDbTableName: ${self:service.name}-${env:ENV}-realtime
-  kinesisStreamName: ${self.service.name}-${env:ENV}-kinesis-stream
   firehoseBucketName: ${env:S3_BUCKET_PREFIX}-${env:ENV}-firehose
+  kinesisStreamName: ${self.service.name}-${env:ENV}-kinesis-stream
   resultsBucketName: ${env:S3_BUCKET_PREFIX}-${env:ENV}-results
   s3BucketName: ${env:S3_BUCKET_PREFIX}-${env:ENV}
 

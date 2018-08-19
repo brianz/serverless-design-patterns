@@ -1,4 +1,4 @@
-NAME = "verypossible/serverless:1.26.1-python3"
+NAME = "verypossible/serverless:1.28.0"
 
 ENVDIR=envs
 LIBS_DIR=serverless/node_modules
