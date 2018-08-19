@@ -1,5 +1,4 @@
 *.swp
-envs/
 .cache/
 node_modues
 npm-debug.log
@@ -105,3 +104,5 @@ ENV/
 
 # mypy
 .mypy_cache/
+.envrc
+.pytest_cache

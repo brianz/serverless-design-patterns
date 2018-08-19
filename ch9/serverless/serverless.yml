@@ -6,6 +6,7 @@ provider:
   region: ${env:AWS_REGION}
   state: ${env:$ENV}
   timeout: 4
+  versionFunctions: false
   environment:
     SENTRY_ENVIRONMENT: ${env:ENV}
     SENTRY_DSN: ${env:SENTRY_DSN}
@@ -35,11 +36,3 @@ functions:
       - http: GET /process
     environment:
       DB_PASSWORD: ${env:DB_PASSWORD}
-
-plugins:
-  - serverless-prune-plugin
-
-custom:
-  prune:
-    automatic: true
-    number: 2

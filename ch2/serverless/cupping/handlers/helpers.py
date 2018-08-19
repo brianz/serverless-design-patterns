@@ -1,12 +1,12 @@
 from schematics.exceptions import (
-        ConversionError,
-        DataError,
-        ValidationError,
+    ConversionError,
+    DataError,
+    ValidationError,
 )
 from ..exceptions import InvalidInputData
 from ..models import (
-        CuppingModel,
-        SessionModel,
+    CuppingModel,
+    SessionModel,
 )
 from ..persistence import Session
 

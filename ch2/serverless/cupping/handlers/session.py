@@ -2,20 +2,19 @@ from schematics.exceptions import DataError
 
 from .decorators import decode_json
 from .helpers import (
-        create_session_from_json_payload,
-        prettify_schematics_errors,
+    create_session_from_json_payload,
+    prettify_schematics_errors,
 )
 
 from ..models import (
-        CuppingModel,
-        SessionModel,
+    CuppingModel,
+    SessionModel,
 )
 from ..persistence import Session, queries
 from ..exceptions import Http404, InvalidInputData
 
 
 def get_sessions(data):
-    sessions = queries.get_sessions()
     models = [SessionModel.from_row(s) for s in queries.get_sessions()]
     return {'sessions': [m.to_native() for m in models]}
 
@@ -31,10 +30,10 @@ def create_session(json_payload):
         session = create_session_from_json_payload(json_payload)
         print('Created session: %s' % (session.id, ))
         response = {
-                'session': {
-                    'id': session.id,
-                    'name': session.name,
-                }
+            'session': {
+                'id': session.id,
+                'name': session.name,
+            }
         }
     except InvalidInputData as e:
         response = {'errors': e.errors}
@@ -72,8 +71,8 @@ def delete_session(data):
 
 def handle_session(http_method, payload):
     method_map = {
-            'GET': get_sessions,
-            'POST': create_session,
+        'GET': get_sessions,
+        'POST': create_session,
     }
     method = http_method.upper()
     return method_map[method](payload)
@@ -81,8 +80,8 @@ def handle_session(http_method, payload):
 
 def handle_session_detail(http_method, payload):
     method_map = {
-            'GET': get_session,
-            'DELETE': delete_session,
+        'GET': get_session,
+        'DELETE': delete_session,
     }
     method = http_method.upper()
     return method_map[method](payload)

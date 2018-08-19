@@ -1,6 +1,6 @@
 factory_boy
-psycopg2
-schematics
+psycopg2-binary
+schematics==2.1.0
 simplejson
 sqlalchemy-utils
 sqlalchemy>=1.2.0b2

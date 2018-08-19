@@ -9,14 +9,14 @@ from sqlalchemy.pool import NullPool
 from sqlalchemy_utils import database_exists, create_database
 
 from ..constants import (
-        DB_ENGINE,
-        DB_HOST,
-        DB_NAME,
-        DB_PASSWORD,
-        DB_PORT,
-        DB_USERNAME,
-        SQLITE,
-        POSTGRESQL,
+    DB_ENGINE,
+    DB_HOST,
+    DB_NAME,
+    DB_PASSWORD,
+    DB_PORT,
+    DB_USERNAME,
+    SQLITE,
+    POSTGRESQL,
 )
 
 __session_factory = None
@@ -42,14 +42,14 @@ def setup_db(*, is_test=False, **db_config):
 
     # TODO - debug stuff
     #if __is_test:
-    connection_kwargs['echo'] = True
+    # connection_kwargs['echo'] = True
 
     session_kwargs = db_config.get('session_kwargs', {})
 
     __engine = create_engine(connection_string, **connection_kwargs)
     print('Connected to: %s' % (__engine.url, ))
 
-    if not database_exists(__engine.url): # pragma: no cover
+    if not database_exists(__engine.url):    # pragma: no cover
         print('Creating database: %s' % (__engine.url, ))
         create_database(__engine.url)
 
@@ -78,15 +78,15 @@ def get_connection_string(**kwargs):
         DB_NAME = 'test_%s' % (DB_NAME, )
 
     return 'postgresql://%s:%s@%s:%s/%s' % (
-            DB_USERNAME,
-            DB_PASSWORD,
-            DB_HOST,
-            DB_PORT,
-            DB_NAME,
+        DB_USERNAME,
+        DB_PASSWORD,
+        DB_HOST,
+        DB_PORT,
+        DB_NAME,
     )
 
 
-def close_db(): # pragma: no cover
+def close_db():    # pragma: no cover
     if not __session:
         return
     try:
@@ -97,7 +97,7 @@ def close_db(): # pragma: no cover
         __session.close()
 
 
-def commit_session(_raise=False): # pragma: no cover
+def commit_session(_raise=False):    # pragma: no cover
     try:
         __session.commit()
     except Exception as e:
@@ -115,6 +115,7 @@ def create_tables():
     assert __engine
     meta = _get_metadata()
     meta.create_all(__engine)
+
 
 def _drop_tables(*, force=False):
     if not __is_test and not force:
@@ -151,23 +152,37 @@ def get_session(**kwargs):
     if __session is not None:
         return __session
 
-    if __session_factory is None: # pragma: no cover
+    if __session_factory is None:    # pragma: no cover
         __session_factory = sessionmaker(bind=__engine, **kwargs)
 
     __session = __session_factory()
     return __session
 
 
+def session_committer(func):
+    """Decorator to comming the DB session."""
+
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        finally:
+            commit_session()
+
+    return wrapper
+
+
 def session_getter(func):
     """Decorator to get a session and inject it as the first argument in a function"""
+
     def wrapper(*args, **kwargs):
         session = get_session()
         return func(session, *args, **kwargs)
+
     return wrapper
 
 
 @contextmanager
-def dbtransaction(): # pragma: no cover
+def dbtransaction():    # pragma: no cover
     s = get_session()
     yield s
     try:

@@ -1,7 +1,7 @@
-NAME = "verypossible/serverless:1.24.0-python3"
+NAME = "verypossible/serverless:1.28.0"
 
 ENVDIR=envs
-LIBS_DIR=serverless
+LIBS_DIR=serverless/node_modules
 
 
 run = docker run --rm -it \
@@ -21,7 +21,7 @@ env-dir :
 
 clean :
 	@test -d $(LIBS_DIR) || mkdir -p $(LIBS_DIR)
-	rm -rf $(LIBS_DIR)/*
+	rm -rf $(LIBS_DIR)
 .PHONY: clean
 
 # make libs should be run from inside the container
